@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — فالمانترا للتداول</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Tajawal:wght@300;400;500;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:        #6A0C0E;
+    --red-lt:     #8B1517;
+    --red-glow:   rgba(106,12,14,0.15);
+    --red-border: rgba(106,12,14,0.3);
+    --bg:         #111111;
+    --bg2:        #181818;
+    --bg3:        #1E1E1E;
+    --line:       rgba(255,255,255,0.07);
+    --white:      #FFFFFF;
+    --text:       #E8E8E8;
+    --text-mid:   #999999;
+    --text-muted: #666666;
+    --grey:       #D1D3D4;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    overflow-x: hidden;
+    direction: rtl;
+    text-align: right;
+  }
+  body.en {
+    font-family: 'Barlow', sans-serif;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+
+  /* ── NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 64px;
+    background: transparent;
+    transition: background 0.4s, padding 0.3s;
+  }
+  nav.scrolled {
+    background: rgba(17,17,17,0.97);
+    backdrop-filter: blur(12px);
+    padding: 14px 64px;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-logo img { height: 42px; width: auto; display: block; }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid var(--red-border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 5px 13px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .nav-cta {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--red);
+    text-decoration: none;
+    padding: 9px 26px;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: var(--red-lt); }
+
+  /* ── HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 130px 60px 90px;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* grid overlay */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+  }
+
+  /* red glow */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(106,12,14,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .harmonic-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    margin-bottom: 36px;
+    position: relative;
+    z-index: 1;
+  }
+  .harmonic-badge img { height: 16px; width: auto; filter: brightness(0) invert(1); opacity: 0.7; }
+  .harmonic-badge-text {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .harmonic-badge-sep {
+    width: 1px; height: 12px;
+    background: var(--text-muted);
+    opacity: 0.3;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 22px;
+    position: relative;
+    z-index: 1;
+    font-family: 'Barlow', sans-serif;
+  }
+
+  .hero-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: clamp(38px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--white);
+    max-width: 800px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  body.en .hero-title {
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .hero-title em { color: var(--red-lt); font-style: normal; }
+
+  .hero-subtitle {
+    font-size: clamp(15px, 2vw, 18px);
+    font-weight: 300;
+    color: var(--text-mid);
+    max-width: 520px;
+    line-height: 1.9;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 44px;
+  }
+  .btn-primary {
+    padding: 15px 40px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+    border: 2px solid var(--red);
+  }
+  .btn-primary:hover { background: var(--red-lt); border-color: var(--red-lt); }
+  .btn-secondary {
+    padding: 15px 40px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 2px solid var(--line);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--red-border); color: var(--white); }
+
+  .hero-collab {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    font-family: "Barlow", sans-serif;
+    position: relative;
+    z-index: 1;
+  }
+  .collab-x { color: var(--red-lt); margin: 0 4px; }
+  .hero-tag {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+  }
+  .hero-tag strong { color: var(--red-lt); font-weight: 700; }
+
+  /* ── DIVIDER */
+  .divider { height: 1px; background: var(--line); }
+
+  /* ── SECTIONS */
+  section { padding: 96px 64px; }
+
+  .section-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 18px;
+    font-family: 'Barlow', sans-serif;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--red-border);
+  }
+
+  .section-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.35;
+    margin-bottom: 18px;
+    max-width: 660px;
+  }
+  body.en .section-title {
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .section-text {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-mid);
+    line-height: 1.95;
+    max-width: 580px;
+  }
+
+  /* ── WHO */
+  .who {
+    background: var(--bg2);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .who-tags { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+  .who-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    padding: 5px 12px;
+    border: 1px solid var(--red-border);
+    font-family: 'Barlow', sans-serif;
+  }
+
+  .who-stats {
+    display: flex;
+    gap: 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--line);
+    padding-top: 32px;
+  }
+  .who-stat {
+    flex: 1;
+    padding-left: 24px;
+    border-left: 1px solid var(--line);
+  }
+  body.en .who-stat { padding-left: 0; padding-right: 24px; border-left: none; border-right: 1px solid var(--line); }
+  .who-stat:first-child { padding-right: 0; border-right: none; padding-left: 0; border-left: none; }
+  body.en .who-stat:first-child { padding-left: 0; border-left: none; padding-right: 0; border-right: none; }
+  .who-stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+  .who-stat-value { font-size: 15px; font-weight: 700; color: var(--white); }
+
+  .who-card {
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    border-right: 3px solid var(--red);
+    padding: 44px 40px;
+    position: relative;
+  }
+  body.en .who-card { border-right: 1px solid var(--line); border-left: 3px solid var(--red); }
+  .who-quote {
+    font-family: 'Almarai', sans-serif;
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.85;
+    margin-bottom: 20px;
+  }
+  body.en .who-quote { font-family: 'Barlow', sans-serif; font-size: 17px; }
+  .who-attr { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; font-family: 'Barlow', sans-serif; }
+
+  /* ── PILLARS */
+  .pillars { background: var(--bg); }
+  .pillars-top { margin-bottom: 52px; }
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+  }
+  .pillar {
+    background: var(--bg);
+    padding: 36px 28px;
+    border-top: 2px solid transparent;
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .pillar:hover { border-top-color: var(--red); background: var(--bg2); }
+  .pillar-num {
+    font-family: 'Barlow', sans-serif;
+    font-size: 38px;
+    font-weight: 300;
+    color: var(--red);
+    opacity: 0.25;
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+  .pillar-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  body.en .pillar-title { font-family: 'Barlow', sans-serif; font-weight: 600; }
+  .pillar-text { font-size: 13px; font-weight: 300; color: var(--text-muted); line-height: 1.9; }
+
+  /* ── FILTER */
+  .filter {
+    background: var(--red);
+    text-align: center;
+    padding: 80px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .filter::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .filter-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: clamp(22px, 3.5vw, 38px);
+    font-weight: 800;
+    color: var(--white);
+    max-width: 660px;
+    margin: 0 auto 16px;
+    line-height: 1.4;
+    position: relative;
+  }
+  body.en .filter-title { font-family: 'Barlow', sans-serif; font-weight: 700; line-height: 1.2; }
+  .filter-title em { font-style: normal; opacity: 0.65; font-weight: 400; }
+  .filter-sub {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.75);
+    max-width: 480px;
+    margin: 0 auto 36px;
+    line-height: 1.9;
+    position: relative;
+  }
+  .btn-white {
+    padding: 14px 38px;
+    background: var(--white);
+    color: var(--red);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    position: relative;
+    transition: opacity 0.2s;
+  }
+  .btn-white:hover { opacity: 0.9; }
+
+  /* ── HOW */
+  .how { background: var(--bg2); }
+  .how-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    margin-top: 52px;
+  }
+  .step { background: var(--bg2); padding: 44px 36px; }
+  .step-num {
+    font-family: 'Barlow', sans-serif;
+    font-size: 54px;
+    font-weight: 300;
+    color: var(--red);
+    opacity: 0.2;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .step-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  body.en .step-title { font-family: 'Barlow', sans-serif; font-weight: 600; }
+  .step-text { font-size: 14px; font-weight: 300; color: var(--text-muted); line-height: 1.9; }
+
+  /* ── CTA */
+  .cta-section {
+    background: var(--bg);
+    text-align: center;
+    padding: 100px 64px;
+    border-top: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(106,12,14,0.2) 0%, transparent 70%);
+  }
+  .cta-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: clamp(28px, 4.5vw, 54px);
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 14px;
+    line-height: 1.3;
+    position: relative;
+  }
+  body.en .cta-title { font-family: 'Barlow', sans-serif; font-weight: 700; line-height: 1.1; }
+  .cta-sub {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text-mid);
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  /* ── FOOTER */
+  footer {
+    background: var(--bg2);
+    padding: 36px 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+  .footer-logo img { height: 30px; width: auto; opacity: 0.5; }
+  .footer-links { display: flex; gap: 28px; }
+  .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-note { font-size: 12px; color: var(--text-muted); font-family: 'Barlow', sans-serif; }
+
+  /* ── RESPONSIVE */
+  @media (max-width: 900px) {
+    nav, nav.scrolled { padding: 16px 24px; }
+    .nav-cta { display: none; }
+    section { padding: 64px 24px; }
+    .hero { padding: 110px 24px 64px; }
+    .who { grid-template-columns: 1fr; gap: 36px; }
+    .pillars-grid { grid-template-columns: 1fr 1fr; }
+    .how-steps { grid-template-columns: 1fr; }
+    .filter { padding: 60px 24px; }
+    .cta-section { padding: 72px 24px; }
+    footer { padding: 24px; flex-direction: column; gap: 20px; text-align: center; }
+    .footer-links { justify-content: center; flex-wrap: wrap; gap: 16px; }
+    .who-stats { flex-direction: column; gap: 20px; }
+    .who-stat { padding-left: 0; border-left: none; border-top: 1px solid var(--line); padding-top: 16px; }
+    body.en .who-stat { padding-right: 0; border-right: none; }
+  }
+  @media (max-width: 580px) {
+    .pillars-grid { grid-template-columns: 1fr; }
+    .hero-btns { flex-direction: column; align-items: center; }
+    .harmonic-badge { flex-direction: column; text-align: center; gap: 6px; }
+    .harmonic-badge-sep { display: none; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav id="nav">
+  <a href="#" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra" style="height:80px;width:auto;"></a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="signup.html" class="nav-cta">
+      <span class="lang-ar">افتح حساباً</span>
+      <span class="lang-en">Open Account</span>
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">
+    <span class="lang-ar">فالمانترا للتداول</span>
+    <span class="lang-en">Valmuntra Trading</span>
+  </p>
+
+  <h1 class="hero-title">
+    <span class="lang-ar">مستقبلك المالي<br>يبدأ من <em>الآن</em></span>
+    <span class="lang-en">Your Financial Future<br>Starts <em>Now</em></span>
+  </h1>
+
+  <p class="hero-subtitle">
+    <span class="lang-ar">تداول واجنِ الأرباح بأمان. بيئة تداول شفافة ومنهجية تعليمية احترافية.</span>
+    <span class="lang-en">Trade and earn safely. A transparent environment with a professional education methodology.</span>
+  </p>
+
+  <div class="hero-btns">
+    <a href="signup.html" class="btn-primary">
+      <span class="lang-ar">افتح حساب التداول</span>
+      <span class="lang-en">Open a Trading Account</span>
+    </a>
+    <a href="#who" class="btn-secondary">
+      <span class="lang-ar">تعرّف علينا</span>
+      <span class="lang-en">Learn More</span>
+    </a>
+  </div>
+
+  <p class="hero-tag">
+    <span class="lang-ar"><strong>فالمانترا.. سورية مية بالمية</strong></span>
+    <span class="lang-en"><strong>Valmuntra.. 100% Syrian</strong></span>
+  </p>
+  <p class="hero-collab">Valmuntra <span class="collab-x">×</span> Harmonic</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- WHO WE ARE -->
+<section class="who" id="who">
+  <div>
+    <div class="who-tags">
+      <span class="who-tag lang-ar">شركة سورية مسجّلة</span>
+      <span class="who-tag lang-en">Registered Syrian Company</span>
+      <span class="who-tag lang-ar">وسيط معتمد</span>
+      <span class="who-tag lang-en">Authorized IB</span>
+    </div>
+    <h2 class="section-title">
+      <span class="lang-ar">وسيط تداول سوري مبني على مبدأ واحد</span>
+      <span class="lang-en">A Syrian introducing broker built on one principle</span>
+    </h2>
+    <p class="section-text">
+      <span class="lang-ar">التداول ليس مقامرة ولا وعوداً بأرباح فورية. هو علم يُحترم ونظام يُنفَّذ ومنهجية تُبنى على الفهم والانضباط. نعمل وسيطاً معتمداً لمنصة Harmonic العالمية لنقدّم للمتداول السوري أفضل تجربة تداول بدعم محلي حقيقي.</span>
+      <span class="lang-en">Trading is not gambling or promises of instant profits. It is a respected science, an executed system, and a methodology built on understanding and discipline. We operate as an authorized introducing broker of Harmonic to bring the Syrian trader a world-class experience with genuine local support.</span>
+    </p>
+    <div class="who-stats">
+      <div class="who-stat">
+        <div class="who-stat-label lang-ar">المنصة</div>
+        <div class="who-stat-label lang-en">Platform</div>
+        <div class="who-stat-value">MT5 / Harmonic</div>
+      </div>
+      <div class="who-stat">
+        <div class="who-stat-label lang-ar">الأسواق</div>
+        <div class="who-stat-label lang-en">Markets</div>
+        <div class="who-stat-value lang-ar">فوركس، مؤشرات، سلع</div>
+        <div class="who-stat-value lang-en">Forex, Indices, Commodities</div>
+      </div>
+      <div class="who-stat">
+        <div class="who-stat-label lang-ar">ساعات التداول</div>
+        <div class="who-stat-label lang-en">Trading Hours</div>
+        <div class="who-stat-value">24/5</div>
+      </div>
+    </div>
+  </div>
+  <div class="who-card">
+    <p class="who-quote">
+      <span class="lang-ar">التداول يجب أن يكون علماً يُحترم ونظاماً يُنفَّذ. لا وعوداً فارغة ولا مغامرات عمياء.</span>
+      <span class="lang-en">Trading must be a respected science and an executed system. No empty promises and no blind adventures.</span>
+    </p>
+    <p class="who-attr">VALMUNTRA TRADING</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PILLARS -->
+<section class="pillars" id="what">
+  <div class="pillars-top">
+    <p class="section-label lang-ar">ما نقدّمه</p>
+    <p class="section-label lang-en">What We Offer</p>
+    <h2 class="section-title">
+      <span class="lang-ar">لا نبيع توصيات. نبني متداولين.</span>
+      <span class="lang-en">We don't sell signals. We build traders.</span>
+    </h2>
+  </div>
+  <div class="pillars-grid">
+    <div class="pillar">
+      <div class="pillar-num">01</div>
+      <h3 class="pillar-title lang-ar">تعليم احترافي</h3>
+      <h3 class="pillar-title lang-en">Professional Education</h3>
+      <p class="pillar-text lang-ar">منهجية شاملة في الفوركس والأسواق المالية تُرسّخ الفهم الحقيقي قبل الدخول إلى السوق.</p>
+      <p class="pillar-text lang-en">A comprehensive methodology in forex and financial markets that builds real understanding before entering the market.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-num">02</div>
+      <h3 class="pillar-title lang-ar">إدارة مخاطر حقيقية</h3>
+      <h3 class="pillar-title lang-en">Real Risk Management</h3>
+      <p class="pillar-text lang-ar">نعلّمك كيف تحمي رأس مالك أولاً. الخطر الحقيقي في الدخول بلا فهم لا في السوق نفسه.</p>
+      <p class="pillar-text lang-en">We teach you how to protect your capital first. The real risk is entering without understanding, not the market itself.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-num">03</div>
+      <h3 class="pillar-title lang-ar">بيئة تداول شفافة</h3>
+      <h3 class="pillar-title lang-en">Transparent Environment</h3>
+      <p class="pillar-text lang-ar">شروط واضحة لا بنود مخفية. منصة MT5 عبر Harmonic مع دعم محلي مباشر.</p>
+      <p class="pillar-text lang-en">Clear conditions with no hidden terms. MT5 platform via Harmonic with direct local support.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-num">04</div>
+      <h3 class="pillar-title lang-ar">للجادّين فقط</h3>
+      <h3 class="pillar-title lang-en">For the Serious Only</h3>
+      <p class="pillar-text lang-ar">هدفنا الجودة لا العدد. نحن للمتداول الذي يفهم أن النجاح رحلة التزام لا ضربة حظ.</p>
+      <p class="pillar-text lang-en">Our goal is quality not quantity. We are for the trader who understands that success is a journey of commitment not luck.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HONEST FILTER -->
+<section class="filter">
+  <h2 class="filter-title">
+    <span class="lang-ar">إن كنت تبحث عن أرباح سريعة بلا التزام،<br><em>فهذا المكان ليس لك.</em></span>
+    <span class="lang-en">If you're looking for quick profits without commitment,<br><em>this place is not for you.</em></span>
+  </h2>
+  <p class="filter-sub">
+    <span class="lang-ar">أما إن كنت تريد طريقاً واضحاً مبنياً على الفهم والانضباط الحقيقي، فأهلاً بك في Valmuntra.</span>
+    <span class="lang-en">But if you want a clear path built on real understanding and discipline, then welcome to Valmuntra.</span>
+  </p>
+  <a href="signup.html" class="btn-white">
+    <span class="lang-ar">ابدأ رحلتك الآن</span>
+    <span class="lang-en">Start Your Journey Now</span>
+  </a>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <p class="section-label lang-ar">كيف تبدأ</p>
+  <p class="section-label lang-en">How to Start</p>
+  <h2 class="section-title">
+    <span class="lang-ar">ثلاث خطوات للبدء</span>
+    <span class="lang-en">Three Steps to Begin</span>
+  </h2>
+  <div class="how-steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3 class="step-title lang-ar">أنشئ حسابك</h3>
+      <h3 class="step-title lang-en">Create Your Account</h3>
+      <p class="step-text lang-ar">سجّل بياناتك الأساسية وأنشئ بوابتك الشخصية على منصة Valmuntra.</p>
+      <p class="step-text lang-en">Register your basic information and create your personal portal on the Valmuntra platform.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3 class="step-title lang-ar">احصل على حساب MT5</h3>
+      <h3 class="step-title lang-en">Get Your MT5 Account</h3>
+      <p class="step-text lang-ar">اطلب فتح حساب تداول على منصة Harmonic. ستصلك بيانات الدخول مباشرةً على بريدك الإلكتروني.</p>
+      <p class="step-text lang-en">Request to open a trading account on Harmonic. Your login credentials will be sent directly to your email.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3 class="step-title lang-ar">ابدأ التداول</h3>
+      <h3 class="step-title lang-en">Start Trading</h3>
+      <p class="step-text lang-ar">موّل حسابك وابدأ التداول بدعم مباشر من فريق Valmuntra في سوريا.</p>
+      <p class="step-text lang-en">Fund your account and start trading with direct support from the Valmuntra team in Syria.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">
+    <span class="lang-ar">حان وقت التداول</span>
+    <span class="lang-en">It's Time to Trade</span>
+  </h2>
+  <p class="cta-sub">
+    <span class="lang-ar">انضم إلى Valmuntra وابدأ رحلتك في الأسواق المالية بثقة وانضباط</span>
+    <span class="lang-en">Join Valmuntra and begin your journey in financial markets with confidence and discipline</span>
+  </p>
+  <a href="signup.html" class="btn-primary">
+    <span class="lang-ar">افتح حساب التداول</span>
+    <span class="lang-en">Open a Trading Account</span>
+  </a>
+</section>
+
+<footer>
+  <a href="#" class="footer-logo"><img src="val_logo_light_ver.png" alt="Valmuntra" style="height:60px;width:auto;opacity:0.5;"></a>
+  <div class="footer-links">
+    <a href="#who"><span class="lang-ar">من نحن</span><span class="lang-en">About</span></a>
+    <a href="#what"><span class="lang-ar">ما نقدّمه</span><span class="lang-en">Services</span></a>
+    <a href="#how"><span class="lang-ar">كيف تبدأ</span><span class="lang-en">How to Start</span></a>
+    <a href="signup.html"><span class="lang-ar">افتح حساباً</span><span class="lang-en">Open Account</span></a>
+  </div>
+  <p class="footer-note">© 2026 Valmuntra Trading — Syria</p>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+</script>
+</body>
+</html>
