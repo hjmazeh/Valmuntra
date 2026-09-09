@@ -36,10 +36,14 @@
   body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
 
   .lang-ar { display: block; }
+  label.lang-en { display: none; }
+  label.lang-ar { display: block; }
   .lang-en { display: none; }
   span.lang-ar { display: inline; }
   span.lang-en { display: none; }
   body.en .lang-ar { display: none; }
+  body.en label.lang-ar { display: none; }
+  body.en label.lang-en { display: block; }
   body.en .lang-en { display: block; }
   body.en span.lang-ar { display: none; }
   body.en span.lang-en { display: inline; }
@@ -179,6 +183,7 @@
 
   /* phone with country code */
   .phone-wrap { display: flex; gap: 8px; }
+  body:not(.en) .phone-wrap { flex-direction: row-reverse; }
   .phone-code {
     width: 80px;
     flex-shrink: 0;
@@ -377,7 +382,7 @@
         <div class="form-group">
           <label class="form-label lang-ar">رقم الهاتف</label>
           <label class="form-label lang-en">Phone Number</label>
-          <div class="phone-wrap">
+          <div class="phone-wrap" id="phone-wrap">
             <input type="text" class="form-input phone-code" id="phone-code" value="+963" placeholder="+963">
             <input type="tel" class="form-input phone-input" id="phone" placeholder="9XXXXXXXX" autocomplete="tel">
           </div>
@@ -572,8 +577,11 @@
     }
   });
 
-  // Lang toggle
-  window.setLang = function(lang) {
+
+</script>
+
+<script>
+  function setLang(lang) {
     const body = document.getElementById('body');
     const btnAr = document.getElementById('btn-ar');
     const btnEn = document.getElementById('btn-en');
@@ -590,8 +598,7 @@
       btnAr.classList.add('active');
       btnEn.classList.remove('active');
     }
-  };
+  }
 </script>
-
 </body>
 </html>
