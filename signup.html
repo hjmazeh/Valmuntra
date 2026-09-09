@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — إنشاء حساب</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:       #6A0C0E;
+    --red-lt:    #8B1517;
+    --red-err:   #FF4444;
+    --bg:        #111111;
+    --bg2:       #181818;
+    --bg3:       #1E1E1E;
+    --line:      rgba(255,255,255,0.07);
+    --white:     #FFFFFF;
+    --text:      #E8E8E8;
+    --text-mid:  #999999;
+    --text-muted:#666666;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    direction: rtl;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+
+  /* ── NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .nav-logo img { height: 70px; width: auto; }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid rgba(106,12,14,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 5px 13px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .nav-back {
+    font-size: 13px;
+    color: var(--text-mid);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--text); }
+
+  /* ── MAIN */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  main::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 300px;
+    background: radial-gradient(ellipse, rgba(106,12,14,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .signup-box {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 44px;
+    position: relative;
+    z-index: 1;
+  }
+  .signup-box::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 100%; height: 3px;
+    background: var(--red);
+  }
+  body.en .signup-box::before { right: auto; left: 0; }
+
+  .signup-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  body.en .signup-title { font-family: 'Barlow', sans-serif; font-weight: 700; }
+
+  .signup-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-mid);
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+
+  /* ── FORM */
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+    text-transform: uppercase;
+  }
+  .form-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Almarai', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  body.en .form-input { font-family: 'Barlow', sans-serif; }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-input:focus { border-color: var(--red); }
+  .form-input.error { border-color: var(--red-err); }
+
+  .form-error {
+    font-size: 12px;
+    color: var(--red-err);
+    margin-top: 6px;
+    display: none;
+  }
+  .form-error.show { display: block; }
+
+  /* phone with country code */
+  .phone-wrap { display: flex; gap: 8px; }
+  .phone-code {
+    width: 80px;
+    flex-shrink: 0;
+    padding: 13px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    text-align: center;
+  }
+  .phone-input { flex: 1; }
+
+  /* password strength */
+  .pass-strength { margin-top: 8px; display: flex; gap: 4px; }
+  .pass-bar {
+    flex: 1; height: 3px;
+    background: var(--line);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .pass-bar.weak { background: #FF4444; }
+  .pass-bar.medium { background: #FF9900; }
+  .pass-bar.strong { background: #22C55E; }
+
+  .form-submit {
+    width: 100%;
+    padding: 15px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Almarai', sans-serif;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, opacity 0.2s;
+    letter-spacing: 0.3px;
+  }
+  body.en .form-submit { font-family: 'Barlow', sans-serif; }
+  .form-submit:hover { background: var(--red-lt); }
+  .form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .form-login {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .form-login a { color: var(--red-lt); text-decoration: none; }
+  .form-login a:hover { text-decoration: underline; }
+
+  /* ── GLOBAL ERROR */
+  .global-error {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    color: #FF8888;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    line-height: 1.6;
+  }
+  .global-error.show { display: block; }
+
+  /* ── SUCCESS STATE */
+  .success-box {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .success-box.show { display: block; }
+  .success-icon {
+    width: 64px; height: 64px;
+    background: rgba(34,197,94,0.1);
+    border: 2px solid rgba(34,197,94,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 28px;
+  }
+  .success-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  body.en .success-title { font-family: 'Barlow', sans-serif; font-weight: 700; }
+  .success-text {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-mid);
+    line-height: 1.8;
+    margin-bottom: 28px;
+  }
+
+  /* ── LOADING SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+    display: none;
+  }
+  .spinner.show { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── FOOTER */
+  footer {
+    padding: 20px 60px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .signup-box { padding: 32px 24px; }
+    footer { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="val_logo_light_ver.png" alt="Valmuntra">
+  </a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="index.html" class="nav-back">
+      <span class="lang-ar">→ العودة للرئيسية</span>
+      <span class="lang-en">← Back to Home</span>
+    </a>
+  </div>
+</nav>
+
+<main>
+  <div class="signup-box">
+
+    <!-- Success State -->
+    <div class="success-box" id="success-box">
+      <div class="success-icon">✓</div>
+      <h2 class="success-title">
+        <span class="lang-ar">تم إنشاء حسابك!</span>
+        <span class="lang-en">Account Created!</span>
+      </h2>
+      <p class="success-text">
+        <span class="lang-ar">شكراً لتسجيلك في Valmuntra. سيتواصل معك فريقنا قريباً على بريدك الإلكتروني لإرسال بيانات حساب MT5 الخاص بك.</span>
+        <span class="lang-en">Thank you for registering with Valmuntra. Our team will contact you shortly at your email with your MT5 account details.</span>
+      </p>
+      <a href="index.html" style="display:inline-block;padding:13px 32px;background:var(--red);color:white;text-decoration:none;font-weight:700;font-size:14px;">
+        <span class="lang-ar">العودة للرئيسية</span>
+        <span class="lang-en">Back to Home</span>
+      </a>
+    </div>
+
+    <!-- Form -->
+    <div id="form-wrap">
+      <h1 class="signup-title">
+        <span class="lang-ar">إنشاء حساب جديد</span>
+        <span class="lang-en">Create an Account</span>
+      </h1>
+      <p class="signup-sub">
+        <span class="lang-ar">أدخل بياناتك لبدء رحلتك مع Valmuntra</span>
+        <span class="lang-en">Enter your details to begin your journey with Valmuntra</span>
+      </p>
+
+      <div class="global-error" id="global-error"></div>
+
+      <form id="signup-form" novalidate>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">الاسم الكامل</label>
+          <label class="form-label lang-en">Full Name</label>
+          <input type="text" class="form-input" id="fullname" placeholder="محمد أحمد" autocomplete="name">
+          <div class="form-error" id="fullname-error">
+            <span class="lang-ar">الرجاء إدخال الاسم الكامل</span>
+            <span class="lang-en">Please enter your full name</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">رقم الهاتف</label>
+          <label class="form-label lang-en">Phone Number</label>
+          <div class="phone-wrap">
+            <input type="text" class="form-input phone-code" id="phone-code" value="+963" placeholder="+963">
+            <input type="tel" class="form-input phone-input" id="phone" placeholder="9XXXXXXXX" autocomplete="tel">
+          </div>
+          <div class="form-error" id="phone-error">
+            <span class="lang-ar">الرجاء إدخال رقم هاتف صحيح</span>
+            <span class="lang-en">Please enter a valid phone number</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">البريد الإلكتروني</label>
+          <label class="form-label lang-en">Email Address</label>
+          <input type="email" class="form-input" id="email" placeholder="example@email.com" autocomplete="email" dir="ltr">
+          <div class="form-error" id="email-error">
+            <span class="lang-ar">الرجاء إدخال بريد إلكتروني صحيح</span>
+            <span class="lang-en">Please enter a valid email address</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">كلمة المرور</label>
+          <label class="form-label lang-en">Password</label>
+          <input type="password" class="form-input" id="password" placeholder="8 أحرف على الأقل" autocomplete="new-password" dir="ltr">
+          <div class="pass-strength">
+            <div class="pass-bar" id="bar1"></div>
+            <div class="pass-bar" id="bar2"></div>
+            <div class="pass-bar" id="bar3"></div>
+          </div>
+          <div class="form-error" id="password-error">
+            <span class="lang-ar">كلمة المرور يجب أن تكون 8 أحرف على الأقل</span>
+            <span class="lang-en">Password must be at least 8 characters</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">تأكيد كلمة المرور</label>
+          <label class="form-label lang-en">Confirm Password</label>
+          <input type="password" class="form-input" id="confirm-password" placeholder="أعد إدخال كلمة المرور" autocomplete="new-password" dir="ltr">
+          <div class="form-error" id="confirm-error">
+            <span class="lang-ar">كلمتا المرور غير متطابقتين</span>
+            <span class="lang-en">Passwords do not match</span>
+          </div>
+        </div>
+
+        <button type="submit" class="form-submit" id="submit-btn">
+          <span class="lang-ar">إنشاء الحساب</span>
+          <span class="lang-en">Create Account</span>
+          <span class="spinner" id="spinner"></span>
+        </button>
+
+        <p class="form-login">
+          <span class="lang-ar">لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></span>
+          <span class="lang-en">Already have an account? <a href="login.html">Sign in</a></span>
+        </p>
+
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<footer>© 2026 Valmuntra Trading — Syria</footer>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra",
+    storageBucket: "valmuntra.firebasestorage.app",
+    messagingSenderId: "428772997561",
+    appId: "1:428772997561:web:9f3580df9eacc2290e9e68",
+    measurementId: "G-60146WBS3S"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Password strength
+  document.getElementById('password').addEventListener('input', function() {
+    const val = this.value;
+    const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3')];
+    bars.forEach(b => { b.className = 'pass-bar'; });
+    if (val.length >= 8) bars[0].classList.add('weak');
+    if (val.length >= 10 && /[0-9]/.test(val)) bars[1].classList.add('medium');
+    if (val.length >= 12 && /[^a-zA-Z0-9]/.test(val)) bars[2].classList.add('strong');
+    else if (val.length >= 10) { bars[0].classList.remove('weak'); bars[0].classList.add('strong'); bars[1].classList.add('strong'); }
+  });
+
+  // Form submit
+  document.getElementById('signup-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const fullname = document.getElementById('fullname').value.trim();
+    const phoneCode = document.getElementById('phone-code').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm-password').value;
+
+    // Clear errors
+    document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+    document.getElementById('global-error').classList.remove('show');
+
+    let valid = true;
+
+    if (!fullname || fullname.length < 3) {
+      document.getElementById('fullname-error').classList.add('show');
+      document.getElementById('fullname').classList.add('error');
+      valid = false;
+    }
+    if (!phone || phone.length < 7) {
+      document.getElementById('phone-error').classList.add('show');
+      document.getElementById('phone').classList.add('error');
+      valid = false;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('email-error').classList.add('show');
+      document.getElementById('email').classList.add('error');
+      valid = false;
+    }
+    if (!password || password.length < 8) {
+      document.getElementById('password-error').classList.add('show');
+      document.getElementById('password').classList.add('error');
+      valid = false;
+    }
+    if (password !== confirm) {
+      document.getElementById('confirm-error').classList.add('show');
+      document.getElementById('confirm-password').classList.add('error');
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    // Show loading
+    const btn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Send verification email
+      await sendEmailVerification(user);
+
+      // Save user data in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        fullname: fullname,
+        phone: phoneCode + phone,
+        email: email,
+        uid: user.uid,
+        mt5_login: null,
+        mt5_password: null,
+        mt5_server: 'Harmonic',
+        status: 'pending',
+        referral_code: user.uid.substring(0, 8).toUpperCase(),
+        referred_by: null,
+        created_at: serverTimestamp()
+      });
+
+      // Show success
+      document.getElementById('form-wrap').style.display = 'none';
+      document.getElementById('success-box').classList.add('show');
+
+    } catch (error) {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+
+      const errEl = document.getElementById('global-error');
+      errEl.classList.add('show');
+
+      const isAr = !document.getElementById('body').classList.contains('en');
+
+      if (error.code === 'auth/email-already-in-use') {
+        errEl.textContent = isAr ? 'هذا البريد الإلكتروني مسجّل بالفعل.' : 'This email is already registered.';
+      } else if (error.code === 'auth/weak-password') {
+        errEl.textContent = isAr ? 'كلمة المرور ضعيفة جداً.' : 'Password is too weak.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errEl.textContent = isAr ? 'تحقق من اتصالك بالإنترنت.' : 'Check your internet connection.';
+      } else {
+        errEl.textContent = isAr ? 'حدث خطأ. الرجاء المحاولة مجدداً.' : 'An error occurred. Please try again.';
+      }
+    }
+  });
+
+  // Lang toggle
+  window.setLang = function(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  };
+</script>
+
+</body>
+</html>
