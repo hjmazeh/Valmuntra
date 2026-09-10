@@ -58,7 +58,7 @@
     top: 0;
     z-index: 100;
   }
-  .nav-logo img { height: 220px; width: auto; margin: -45px 0; }
+  .nav-logo img { height: 140px; width: auto; margin: -28px 0; }
   .nav-right { display: flex; align-items: center; gap: 16px; }
   .nav-user {
     font-size: 13px;
@@ -399,11 +399,7 @@
 
     <!-- Greeting -->
     <div class="portal-greeting">
-      <h1>
-        <span class="lang-ar">بوابتي</span>
-        <span class="lang-en">My Portal</span>
-      </h1>
-      <p id="greeting-sub"></p>
+      <h1 id="portal-title">بوابتي</h1>
     </div>
 
     <!-- STATUS: pending_kyc -->
@@ -600,11 +596,13 @@
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
     document.getElementById('nav-name').textContent = firstName;
 
-    // Set greeting subtitle
+    // Set portal title based on language
+    const isArLang = !document.getElementById('body').classList.contains('en');
+    document.getElementById('portal-title').textContent = isArLang ? 'بوابتي' : 'My Portal';
+
+    // Set portal title
     const isAr = !document.getElementById('body').classList.contains('en');
-    document.getElementById('greeting-sub').textContent = isAr
-      ? 'مرحباً بك في بوابة Valmuntra'
-      : 'Welcome to your Valmuntra portal';
+    document.getElementById('portal-title').textContent = isAr ? 'بوابتي' : 'My Portal';
 
     // Hide loading, show content
     document.getElementById('loading-screen').style.display = 'none';
