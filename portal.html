@@ -399,7 +399,7 @@
 
     <!-- Greeting -->
     <div class="portal-greeting">
-      <h1 id="portal-title">بوابتي</h1>
+      <h1 id="portal-title">بوابتي / My Portal</h1>
     </div>
 
     <!-- STATUS: pending_kyc -->
@@ -533,12 +533,14 @@
       body.setAttribute('lang', 'en');
       btnEn.classList.add('active');
       btnAr.classList.remove('active');
+
     } else {
       body.classList.remove('en');
       body.setAttribute('dir', 'rtl');
       body.setAttribute('lang', 'ar');
       btnAr.classList.add('active');
       btnEn.classList.remove('active');
+
     }
   }
 
@@ -596,13 +598,7 @@
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
     document.getElementById('nav-name').textContent = firstName;
 
-    // Set portal title based on language
-    const isArLang = !document.getElementById('body').classList.contains('en');
-    document.getElementById('portal-title').textContent = isArLang ? 'بوابتي' : 'My Portal';
 
-    // Set portal title
-    const isAr = !document.getElementById('body').classList.contains('en');
-    document.getElementById('portal-title').textContent = isAr ? 'بوابتي' : 'My Portal';
 
     // Hide loading, show content
     document.getElementById('loading-screen').style.display = 'none';
