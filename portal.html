@@ -367,7 +367,7 @@
 <body id="body">
 
 <nav>
-  <a href="index.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
+  <a href="portal.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
   <div class="nav-right">
     <div class="nav-user">
       <span class="lang-ar">مرحباً، </span>
@@ -400,6 +400,14 @@
     <!-- Greeting -->
     <div class="portal-greeting">
       <h1 id="portal-title">بوابتي / My Portal</h1>
+    </div>
+
+    <!-- STATUS: email not verified -->
+    <div class="status-card" id="card-not-verified" style="display:none;">
+      <div class="status-badge info"><div class="status-dot"></div><span class="lang-ar">البريد غير مفعّل</span><span class="lang-en">Email Not Verified</span></div>
+      <h2 class="status-title"><span class="lang-ar">يرجى تفعيل بريدك الإلكتروني</span><span class="lang-en">Please Verify Your Email</span></h2>
+      <p class="status-text"><span class="lang-ar">أرسلنا رابط التفعيل إلى بريدك الإلكتروني عند التسجيل. يرجى التحقق من صندوق الوارد والضغط على الرابط للمتابعة.</span><span class="lang-en">We sent a verification link to your email when you signed up. Please check your inbox and click the link to continue.</span></p>
+      <button class="btn-primary" onclick="resendVerification()"><span class="lang-ar">إعادة إرسال رابط التفعيل</span><span class="lang-en">Resend Verification Email</span></button>
     </div>
 
     <!-- STATUS: pending_kyc -->
@@ -563,7 +571,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -593,6 +601,15 @@
     }
 
     const data = userDoc.data();
+
+    // Check email verification
+    if (!user.emailVerified) {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('portal-content').style.display = 'block';
+      document.getElementById('nav-name').textContent = data.fullname ? data.fullname.split(' ')[0] : '';
+      document.getElementById('card-not-verified').style.display = 'block';
+      return;
+    }
 
     // Set name in nav
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
