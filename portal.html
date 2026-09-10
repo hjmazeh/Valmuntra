@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — بوابتي</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:       #6A0C0E;
+    --red-lt:    #8B1517;
+    --red-dim:   rgba(106,12,14,0.1);
+    --bg:        #111111;
+    --bg2:       #181818;
+    --bg3:       #1E1E1E;
+    --line:      rgba(255,255,255,0.07);
+    --white:     #FFFFFF;
+    --text:      #E8E8E8;
+    --text-mid:  #999999;
+    --text-muted:#666666;
+    --green:     #22C55E;
+    --green-dim: rgba(34,197,94,0.1);
+    --yellow:    #F59E0B;
+    --yellow-dim:rgba(245,158,11,0.1);
+    --red-err:   #FF4444;
+  }
+
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+
+  /* ── NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 64px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo img { height: 220px; width: auto; margin: -45px 0; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-user {
+    font-size: 13px;
+    color: var(--text-mid);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-user strong { color: var(--text); font-weight: 500; }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid rgba(106,12,14,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 4px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .nav-logout {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    font-family: 'Almarai', sans-serif;
+  }
+  .nav-logout:hover { color: var(--red-lt); }
+
+  /* ── LAYOUT */
+  .portal-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .portal-greeting {
+    margin-bottom: 32px;
+  }
+  .portal-greeting h1 {
+    font-family: 'Almarai', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  body.en .portal-greeting h1 { font-family: 'Barlow', sans-serif; font-weight: 700; }
+  .portal-greeting p { font-size: 14px; color: var(--text-muted); font-weight: 300; }
+
+  /* ── STATUS CARD */
+  .status-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .status-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: var(--red);
+  }
+  body.en .status-card::before { right: auto; left: 0; }
+  .status-card.green::before { background: var(--green); }
+  .status-card.yellow::before { background: var(--yellow); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Barlow', sans-serif;
+    margin-bottom: 16px;
+  }
+  .status-badge.pending { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+  .status-badge.success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .status-badge.error { background: rgba(255,68,68,0.1); color: var(--red-err); border: 1px solid rgba(255,68,68,0.2); }
+  .status-badge.info { background: var(--red-dim); color: var(--red-lt); border: 1px solid rgba(106,12,14,0.2); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .status-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  body.en .status-title { font-family: 'Barlow', sans-serif; font-weight: 600; }
+  .status-text { font-size: 14px; font-weight: 300; color: var(--text-mid); line-height: 1.8; margin-bottom: 20px; }
+
+  .rejection-reason {
+    background: rgba(255,68,68,0.07);
+    border: 1px solid rgba(255,68,68,0.15);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #FF8888;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  /* ── BUTTONS */
+  .btn-primary {
+    display: inline-block;
+    padding: 13px 32px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Almarai', sans-serif;
+    transition: background 0.2s;
+  }
+  body.en .btn-primary { font-family: 'Barlow', sans-serif; }
+  .btn-primary:hover { background: var(--red-lt); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-outline {
+    display: inline-block;
+    padding: 13px 32px;
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: 'Almarai', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--red-border); }
+
+  /* ── MT5 CARD */
+  .mt5-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+  .mt5-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 24px;
+    font-family: 'Barlow', sans-serif;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mt5-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .mt5-field { }
+  .mt5-field-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+  .mt5-field-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .copy-btn {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: color 0.2s;
+  }
+  .copy-btn:hover { color: var(--text); }
+
+  /* ── REFERRAL CARD */
+  .referral-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+  .referral-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .referral-card-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; font-weight: 300; }
+  .referral-link-box {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+  }
+  .referral-link-text {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-mid);
+    font-family: 'Barlow', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: ltr;
+  }
+  .referral-copy-btn {
+    padding: 12px 20px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .referral-copy-btn:hover { background: var(--red-lt); }
+  .referral-stats { display: flex; gap: 32px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .referral-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Barlow', sans-serif; margin-bottom: 4px; }
+  .referral-stat-value { font-size: 22px; font-weight: 700; color: var(--white); font-family: 'Barlow', sans-serif; }
+
+  /* ── FUNDING CARD */
+  .funding-card {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    padding: 32px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+    position: relative;
+  }
+  .funding-soon {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg3);
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+  }
+  body.en .funding-soon { left: auto; right: 16px; }
+  .funding-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+  }
+  .funding-card-sub { font-size: 13px; color: var(--text-muted); font-weight: 300; }
+
+  /* ── LOADING */
+  .loading-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--line);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text-muted); }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 20px; }
+    .portal-wrap { padding: 24px 16px 60px; }
+    .status-card, .mt5-card, .referral-card, .funding-card { padding: 24px 20px; }
+    .mt5-fields { grid-template-columns: 1fr; }
+    .referral-stats { flex-direction: column; gap: 16px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="index.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
+  <div class="nav-right">
+    <div class="nav-user">
+      <span class="lang-ar">مرحباً، </span>
+      <span class="lang-en">Hello, </span>
+      <strong id="nav-name">...</strong>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="nav-logout" onclick="logout()">
+      <span class="lang-ar">خروج</span>
+      <span class="lang-en">Logout</span>
+    </button>
+  </div>
+</nav>
+
+<div class="portal-wrap">
+
+  <!-- Loading -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-spinner"></div>
+    <p class="loading-text lang-ar">جارٍ تحميل بياناتك...</p>
+    <p class="loading-text lang-en">Loading your data...</p>
+  </div>
+
+  <!-- Portal content (hidden until loaded) -->
+  <div id="portal-content" style="display:none;">
+
+    <!-- Greeting -->
+    <div class="portal-greeting">
+      <h1>
+        <span class="lang-ar">بوابتي</span>
+        <span class="lang-en">My Portal</span>
+      </h1>
+      <p id="greeting-sub"></p>
+    </div>
+
+    <!-- STATUS: pending_kyc -->
+    <div class="status-card" id="card-pending-kyc" style="display:none;">
+      <div class="status-badge info"><div class="status-dot"></div><span class="lang-ar">التحقق مطلوب</span><span class="lang-en">Verification Required</span></div>
+      <h2 class="status-title"><span class="lang-ar">أكمل التحقق من هويتك</span><span class="lang-en">Complete Your Identity Verification</span></h2>
+      <p class="status-text"><span class="lang-ar">للوصول إلى خدمات التداول، نحتاج التحقق من هويتك أولاً. العملية بسيطة ولا تستغرق سوى دقائق.</span><span class="lang-en">To access trading services, we need to verify your identity first. The process is simple and takes only a few minutes.</span></p>
+      <a href="kyc.html" class="btn-primary"><span class="lang-ar">ابدأ التحقق من الهوية</span><span class="lang-en">Start Identity Verification</span></a>
+    </div>
+
+    <!-- STATUS: kyc_submitted -->
+    <div class="status-card yellow" id="card-kyc-submitted" style="display:none;">
+      <div class="status-badge pending"><div class="status-dot"></div><span class="lang-ar">قيد المراجعة</span><span class="lang-en">Under Review</span></div>
+      <h2 class="status-title"><span class="lang-ar">وثائقك قيد المراجعة</span><span class="lang-en">Your Documents Are Under Review</span></h2>
+      <p class="status-text"><span class="lang-ar">استلمنا وثائقك وسيراجعها فريقنا في أقرب وقت. ستتمكن من إنشاء حساب التداول بعد اكتمال التحقق.</span><span class="lang-en">We received your documents and our team will review them shortly. You will be able to create a trading account once verification is complete.</span></p>
+    </div>
+
+    <!-- STATUS: kyc_rejected -->
+    <div class="status-card" id="card-kyc-rejected" style="display:none;">
+      <div class="status-badge error"><div class="status-dot"></div><span class="lang-ar">تم الرفض</span><span class="lang-en">Rejected</span></div>
+      <h2 class="status-title"><span class="lang-ar">تم رفض طلب التحقق</span><span class="lang-en">Verification Request Rejected</span></h2>
+      <div class="rejection-reason" id="rejection-reason-box">
+        <span class="lang-ar">السبب: </span><span class="lang-en">Reason: </span><span id="rejection-reason-text"></span>
+      </div>
+      <p class="status-text"><span class="lang-ar">يرجى تصحيح المشكلة وإعادة تقديم وثائقك.</span><span class="lang-en">Please correct the issue and resubmit your documents.</span></p>
+      <a href="kyc.html" class="btn-primary"><span class="lang-ar">إعادة التقديم</span><span class="lang-en">Resubmit</span></a>
+    </div>
+
+    <!-- STATUS: kyc_approved -->
+    <div class="status-card green" id="card-kyc-approved" style="display:none;">
+      <div class="status-badge success"><div class="status-dot"></div><span class="lang-ar">تم التحقق</span><span class="lang-en">Verified</span></div>
+      <h2 class="status-title"><span class="lang-ar">تم التحقق من هويتك بنجاح</span><span class="lang-en">Identity Verified Successfully</span></h2>
+      <p class="status-text"><span class="lang-ar">يمكنك الآن إنشاء حساب التداول على منصة Harmonic MT5.</span><span class="lang-en">You can now create a trading account on the Harmonic MT5 platform.</span></p>
+      <button class="btn-primary" onclick="requestMT5()"><span class="lang-ar">إنشاء حساب MT5</span><span class="lang-en">Create MT5 Account</span></button>
+    </div>
+
+    <!-- STATUS: mt5_requested -->
+    <div class="status-card yellow" id="card-mt5-requested" style="display:none;">
+      <div class="status-badge pending"><div class="status-dot"></div><span class="lang-ar">جارٍ الإنشاء</span><span class="lang-en">Being Created</span></div>
+      <h2 class="status-title"><span class="lang-ar">جارٍ إنشاء حسابك</span><span class="lang-en">Your Account Is Being Created</span></h2>
+      <p class="status-text"><span class="lang-ar">فريقنا يعمل على إنشاء حساب MT5 الخاص بك. تفقّد بوابتك قريباً لمشاهدة بيانات الدخول.</span><span class="lang-en">Our team is creating your MT5 account. Check your portal soon to see your login details.</span></p>
+    </div>
+
+    <!-- STATUS: active — MT5 details -->
+    <div id="card-active" style="display:none;">
+      <div class="mt5-card">
+        <div class="mt5-card-title lang-ar">بيانات حساب MT5</div>
+        <div class="mt5-card-title lang-en">MT5 Account Details</div>
+        <div class="mt5-fields">
+          <div class="mt5-field">
+            <div class="mt5-field-label lang-ar">رقم الحساب</div>
+            <div class="mt5-field-label lang-en">Login</div>
+            <div class="mt5-field-value">
+              <span id="mt5-login">—</span>
+              <button class="copy-btn" onclick="copyText('mt5-login')">
+                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
+              </button>
+            </div>
+          </div>
+          <div class="mt5-field">
+            <div class="mt5-field-label lang-ar">كلمة المرور</div>
+            <div class="mt5-field-label lang-en">Password</div>
+            <div class="mt5-field-value">
+              <span id="mt5-password">—</span>
+              <button class="copy-btn" onclick="copyText('mt5-password')">
+                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
+              </button>
+            </div>
+          </div>
+          <div class="mt5-field">
+            <div class="mt5-field-label lang-ar">السيرفر</div>
+            <div class="mt5-field-label lang-en">Server</div>
+            <div class="mt5-field-value">
+              <span id="mt5-server">Harmonic</span>
+              <button class="copy-btn" onclick="copyText('mt5-server')">
+                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
+              </button>
+            </div>
+          </div>
+          <div class="mt5-field">
+            <div class="mt5-field-label lang-ar">المنصة</div>
+            <div class="mt5-field-label lang-en">Platform</div>
+            <div class="mt5-field-value">MT5</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referral -->
+      <div class="referral-card">
+        <div class="referral-card-title lang-ar">رابط الإحالة</div>
+        <div class="referral-card-title lang-en">Referral Link</div>
+        <p class="referral-card-sub lang-ar">شارك رابطك مع أصدقائك واكسب عمولات على تداولاتهم</p>
+        <p class="referral-card-sub lang-en">Share your link with friends and earn commissions on their trades</p>
+        <div class="referral-link-box">
+          <div class="referral-link-text" id="referral-link-text">—</div>
+          <button class="referral-copy-btn" onclick="copyReferral()">
+            <span class="lang-ar">نسخ الرابط</span><span class="lang-en">Copy Link</span>
+          </button>
+        </div>
+        <div class="referral-stats">
+          <div>
+            <div class="referral-stat-label lang-ar">عدد الإحالات</div>
+            <div class="referral-stat-label lang-en">Referrals</div>
+            <div class="referral-stat-value" id="referral-count">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Funding (coming soon) -->
+    <div class="funding-card">
+      <div class="funding-soon lang-ar">قريباً</div>
+      <div class="funding-soon lang-en">Coming Soon</div>
+      <div class="funding-card-title lang-ar">تمويل الحساب</div>
+      <div class="funding-card-title lang-en">Fund Your Account</div>
+      <p class="funding-card-sub lang-ar">ShamCash · USDT</p>
+      <p class="funding-card-sub lang-en">ShamCash · USDT</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+
+  function copyText(id) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const isAr = !document.getElementById('body').classList.contains('en');
+      alert(isAr ? 'تم النسخ!' : 'Copied!');
+    });
+  }
+
+  function copyReferral() {
+    const text = document.getElementById('referral-link-text').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const isAr = !document.getElementById('body').classList.contains('en');
+      alert(isAr ? 'تم نسخ الرابط!' : 'Link copied!');
+    });
+  }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra",
+    storageBucket: "valmuntra.firebasestorage.app",
+    messagingSenderId: "428772997561",
+    appId: "1:428772997561:web:9f3580df9eacc2290e9e68"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Load user data
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (!userDoc.exists()) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const data = userDoc.data();
+
+    // Set name in nav
+    const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
+    document.getElementById('nav-name').textContent = firstName;
+
+    // Set greeting subtitle
+    const isAr = !document.getElementById('body').classList.contains('en');
+    document.getElementById('greeting-sub').textContent = isAr
+      ? 'مرحباً بك في بوابة Valmuntra'
+      : 'Welcome to your Valmuntra portal';
+
+    // Hide loading, show content
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('portal-content').style.display = 'block';
+
+    // Show correct status card
+    const status = data.status || 'pending_kyc';
+    const cards = ['pending-kyc','kyc-submitted','kyc-rejected','kyc-approved','mt5-requested','active'];
+    cards.forEach(c => {
+      const el = document.getElementById('card-' + c);
+      if (el) el.style.display = 'none';
+    });
+
+    if (status === 'pending_kyc' || status === 'pending') {
+      document.getElementById('card-pending-kyc').style.display = 'block';
+    } else if (status === 'kyc_submitted') {
+      document.getElementById('card-kyc-submitted').style.display = 'block';
+    } else if (status === 'kyc_rejected') {
+      document.getElementById('card-kyc-rejected').style.display = 'block';
+      document.getElementById('rejection-reason-text').textContent = data.rejection_reason || '';
+    } else if (status === 'kyc_approved') {
+      document.getElementById('card-kyc-approved').style.display = 'block';
+    } else if (status === 'mt5_requested') {
+      document.getElementById('card-mt5-requested').style.display = 'block';
+    } else if (status === 'active') {
+      document.getElementById('card-active').style.display = 'block';
+      document.getElementById('mt5-login').textContent = data.mt5_login || '—';
+      document.getElementById('mt5-password').textContent = data.mt5_password || '—';
+      document.getElementById('mt5-server').textContent = data.mt5_server || 'Harmonic';
+      // Referral link
+      const refCode = data.referral_code || '';
+      document.getElementById('referral-link-text').textContent = 'https://valmuntra.com/signup.html?ref=' + refCode;
+    }
+
+    // Request MT5 function
+    window.requestMT5 = async function() {
+      await updateDoc(doc(db, 'users', user.uid), { status: 'mt5_requested' });
+      document.getElementById('card-kyc-approved').style.display = 'none';
+      document.getElementById('card-mt5-requested').style.display = 'block';
+    };
+
+    // Logout
+    window.logout = async function() {
+      await signOut(auth);
+      window.location.href = 'login.html';
+    };
+  });
+</script>
+
+</body>
+</html>
