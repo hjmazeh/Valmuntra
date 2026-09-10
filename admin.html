@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:       #6A0C0E;
+    --red-lt:    #8B1517;
+    --bg:        #111111;
+    --bg2:       #181818;
+    --bg3:       #1E1E1E;
+    --line:      rgba(255,255,255,0.07);
+    --white:     #FFFFFF;
+    --text:      #E8E8E8;
+    --text-mid:  #999999;
+    --text-muted:#666666;
+    --green:     #22C55E;
+    --yellow:    #F59E0B;
+    --red-err:   #FF4444;
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── AUTH SCREEN */
+  .auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .auth-box {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .auth-title { font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+  .auth-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+  .auth-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-mid); margin-bottom: 8px; }
+  .auth-input {
+    width: 100%; padding: 12px 16px;
+    background: var(--bg3); border: 1px solid var(--line);
+    color: var(--text); font-size: 15px; font-family: 'Barlow', sans-serif;
+    outline: none; margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: var(--red); }
+  .auth-btn {
+    width: 100%; padding: 13px;
+    background: var(--red); color: var(--white);
+    font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .auth-btn:hover { background: var(--red-lt); }
+  .auth-error { font-size: 13px; color: var(--red-err); margin-top: 12px; display: none; }
+  .auth-error.show { display: block; }
+
+  /* ── MAIN LAYOUT */
+  .admin-layout { display: none; height: 100vh; flex-direction: column; }
+  .admin-layout.show { display: flex; }
+
+  /* top nav */
+  .admin-nav {
+    height: 56px; background: var(--bg2);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 24px; flex-shrink: 0;
+  }
+  .admin-nav-title { font-size: 15px; font-weight: 700; color: var(--white); display: flex; align-items: center; gap: 10px; }
+  .admin-nav-title span { color: var(--red); }
+  .admin-nav-right { display: flex; align-items: center; gap: 16px; }
+  .admin-user-email { font-size: 12px; color: var(--text-muted); }
+  .btn-sm {
+    padding: 6px 16px; font-size: 12px; font-weight: 600;
+    background: transparent; border: 1px solid var(--line);
+    color: var(--text-mid); cursor: pointer; font-family: 'Barlow', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-sm:hover { border-color: var(--red); color: var(--text); }
+  .btn-sm.red { background: var(--red); border-color: var(--red); color: var(--white); }
+  .btn-sm.red:hover { background: var(--red-lt); }
+  .btn-sm.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+  .btn-sm.green:hover { background: rgba(34,197,94,0.2); }
+
+  /* body split */
+  .admin-body { display: flex; flex: 1; overflow: hidden; }
+
+  /* LEFT: user list */
+  .user-list-panel {
+    width: 380px; flex-shrink: 0;
+    background: var(--bg2);
+    border-left: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .panel-header h2 { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+
+  .filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .filter-tab {
+    padding: 4px 10px; font-size: 11px; font-weight: 600;
+    background: transparent; border: 1px solid var(--line);
+    color: var(--text-muted); cursor: pointer; border-radius: 2px;
+    font-family: 'Barlow', sans-serif; transition: all 0.2s;
+  }
+  .filter-tab.active { background: var(--red); border-color: var(--red); color: var(--white); }
+
+  .search-box {
+    width: 100%; padding: 10px 16px; margin-top: 10px;
+    background: var(--bg3); border: 1px solid var(--line);
+    color: var(--text); font-size: 13px; font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+  .search-box:focus { border-color: var(--red); }
+
+  .user-list { flex: 1; overflow-y: auto; }
+  .user-item {
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    cursor: pointer; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .user-item:hover { background: var(--bg3); }
+  .user-item.active { background: rgba(106,12,14,0.15); border-right: 3px solid var(--red); }
+  .user-item-name { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+  .user-item-email { font-size: 12px; color: var(--text-muted); }
+  .user-item-meta { font-size: 11px; color: var(--text-muted); text-align: right; }
+
+  .status-pill {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 2px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .status-pill.pending { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .status-pill.kyc_submitted { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .status-pill.kyc_approved { background: rgba(34,197,94,0.15); color: var(--green); }
+  .status-pill.kyc_rejected { background: rgba(255,68,68,0.15); color: var(--red-err); }
+  .status-pill.mt5_requested { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .status-pill.active { background: rgba(34,197,94,0.15); color: var(--green); }
+  .status-pill.pending_kyc { background: rgba(106,12,14,0.2); color: var(--red-lt); }
+
+  /* RIGHT: detail panel */
+  .detail-panel {
+    flex: 1; overflow-y: auto;
+    padding: 32px; background: var(--bg);
+  }
+  .detail-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-muted); font-size: 14px;
+  }
+  .detail-content { display: none; }
+  .detail-content.show { display: block; }
+
+  .detail-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; margin-bottom: 32px;
+    padding-bottom: 24px; border-bottom: 1px solid var(--line);
+  }
+  .detail-name { font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .detail-email { font-size: 14px; color: var(--text-muted); }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .info-item { }
+  .info-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .info-value { font-size: 15px; color: var(--white); font-weight: 500; }
+
+  .section-divider {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--red-lt);
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* KYC photos */
+  .kyc-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .kyc-photo { background: var(--bg3); border: 1px solid var(--line); aspect-ratio: 4/3; overflow: hidden; position: relative; }
+  .kyc-photo img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: opacity 0.2s; }
+  .kyc-photo img:hover { opacity: 0.8; }
+  .kyc-photo-label { font-size: 10px; color: var(--text-muted); text-align: center; padding: 6px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .kyc-photo-null { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 12px; }
+
+  /* action forms */
+  .action-box {
+    background: var(--bg2); border: 1px solid var(--line);
+    padding: 24px; margin-bottom: 16px;
+  }
+  .action-box-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 16px; }
+  .form-row-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .admin-input {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg3); border: 1px solid var(--line);
+    color: var(--text); font-size: 14px; font-family: 'Barlow', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .admin-input:focus { border-color: var(--red); }
+  .admin-textarea {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg3); border: 1px solid var(--line);
+    color: var(--text); font-size: 14px; font-family: 'Barlow', sans-serif;
+    outline: none; resize: vertical; min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .admin-textarea:focus { border-color: var(--red); }
+
+  /* create client modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--bg2); border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    width: 100%; max-width: 600px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 32px;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+  .modal-close:hover { color: var(--text); }
+
+  .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-left: 8px; vertical-align: middle;
+  }
+  .spinner.show { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 12px 20px; border-radius: 2px;
+    font-size: 13px; font-weight: 600;
+    z-index: 300; display: none;
+    font-family: 'Barlow', sans-serif;
+  }
+  .toast.show { display: block; }
+  .toast.success { background: rgba(34,197,94,0.9); color: white; }
+  .toast.error { background: rgba(255,68,68,0.9); color: white; }
+
+  /* image lightbox */
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9); z-index: 400;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-box">
+    <h1 class="auth-title">Valmuntra <span style="color:var(--red)">Admin</span></h1>
+    <p class="auth-sub">Sign in with your admin account</p>
+    <label class="auth-label">Email</label>
+    <input type="email" class="auth-input" id="auth-email" placeholder="admin@valmuntra.com">
+    <label class="auth-label">Password</label>
+    <input type="password" class="auth-input" id="auth-password" placeholder="••••••••">
+    <button class="auth-btn" id="auth-btn" onclick="adminLogin()">
+      Sign In <span class="spinner" id="auth-spinner"></span>
+    </button>
+    <p class="auth-error" id="auth-error"></p>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+<div class="admin-layout" id="admin-layout">
+
+  <!-- Nav -->
+  <div class="admin-nav">
+    <div class="admin-nav-title">Valmuntra <span>Admin Panel</span></div>
+    <div class="admin-nav-right">
+      <span class="admin-user-email" id="admin-email-display"></span>
+      <button class="btn-sm red" onclick="showCreateModal()">+ Create Client</button>
+      <button class="btn-sm" onclick="adminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="admin-body">
+
+    <!-- User List -->
+    <div class="user-list-panel">
+      <div class="panel-header">
+        <h2>Clients <span id="user-count" style="color:var(--text-muted);font-weight:400;"></span></h2>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterUsers('all', this)">All</button>
+          <button class="filter-tab" onclick="filterUsers('kyc_submitted', this)">KYC Pending</button>
+          <button class="filter-tab" onclick="filterUsers('kyc_approved', this)">Approved</button>
+          <button class="filter-tab" onclick="filterUsers('mt5_requested', this)">MT5 Req</button>
+          <button class="filter-tab" onclick="filterUsers('active', this)">Active</button>
+          <button class="filter-tab" onclick="filterUsers('kyc_rejected', this)">Rejected</button>
+        </div>
+        <input type="text" class="search-box" placeholder="Search by name or email..." oninput="searchUsers(this.value)">
+      </div>
+      <div class="user-list" id="user-list">
+        <div style="padding:20px;color:var(--text-muted);font-size:13px;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-empty" id="detail-empty">← Select a client to view details</div>
+      <div class="detail-content" id="detail-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create Client Modal -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      Create Client Manually
+      <button class="modal-close" onclick="hideCreateModal()">×</button>
+    </div>
+
+    <div class="section-divider">Account Info</div>
+    <div class="form-row-admin">
+      <div>
+        <label class="auth-label">Full Name</label>
+        <input type="text" class="admin-input" id="c-fullname" placeholder="Mohammad Ahmad">
+      </div>
+      <div>
+        <label class="auth-label">Phone</label>
+        <input type="text" class="admin-input" id="c-phone" placeholder="+963XXXXXXXXX">
+      </div>
+    </div>
+    <div class="form-row-admin">
+      <div>
+        <label class="auth-label">Email</label>
+        <input type="email" class="admin-input" id="c-email" placeholder="client@email.com">
+      </div>
+      <div>
+        <label class="auth-label">Password</label>
+        <input type="text" class="admin-input" id="c-password" placeholder="Temp password">
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:20px;">KYC Info</div>
+    <div class="form-row-admin">
+      <div>
+        <label class="auth-label">Date of Birth</label>
+        <input type="date" class="admin-input" id="c-dob">
+      </div>
+      <div>
+        <label class="auth-label">Nationality</label>
+        <input type="text" class="admin-input" id="c-nationality" value="SY">
+      </div>
+    </div>
+    <div class="form-row-admin">
+      <div>
+        <label class="auth-label">City</label>
+        <input type="text" class="admin-input" id="c-city" placeholder="Damascus">
+      </div>
+      <div>
+        <label class="auth-label">Country</label>
+        <input type="text" class="admin-input" id="c-country" value="سوريا">
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:20px;">MT5 Credentials (optional)</div>
+    <div class="form-row-admin">
+      <div>
+        <label class="auth-label">MT5 Login</label>
+        <input type="text" class="admin-input" id="c-mt5-login" placeholder="Leave empty if not ready">
+      </div>
+      <div>
+        <label class="auth-label">MT5 Password</label>
+        <input type="text" class="admin-input" id="c-mt5-password" placeholder="Leave empty if not ready">
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <label class="auth-label">Referred By (referral code, optional)</label>
+      <input type="text" class="admin-input" id="c-referred-by" placeholder="Leave empty if none">
+    </div>
+
+    <p id="create-error" style="color:var(--red-err);font-size:13px;margin-top:12px;display:none;"></p>
+
+    <button class="auth-btn" style="margin-top:20px;" id="create-btn" onclick="createClientManually()">
+      Create Client <span class="spinner" id="create-spinner"></span>
+    </button>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra",
+    storageBucket: "valmuntra.firebasestorage.app",
+    messagingSenderId: "428772997561",
+    appId: "1:428772997561:web:9f3580df9eacc2290e9e68"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let allUsers = [];
+  let currentFilter = 'all';
+  let currentSearch = '';
+  let selectedUid = null;
+
+  // ── AUTH
+  window.adminLogin = async function() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const btn = document.getElementById('auth-btn');
+    const spinner = document.getElementById('auth-spinner');
+    const errEl = document.getElementById('auth-error');
+    errEl.classList.remove('show');
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      // Check if admin
+      const snap = await getDocs(collection(db, 'users'));
+      let isAdmin = false;
+      snap.forEach(d => {
+        if (d.data().email === email && d.data().is_admin === true) isAdmin = true;
+      });
+      if (!isAdmin) {
+        await signOut(auth);
+        errEl.textContent = 'Access denied. You are not an admin.';
+        errEl.classList.add('show');
+        btn.disabled = false;
+        spinner.classList.remove('show');
+        return;
+      }
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('admin-layout').classList.add('show');
+      document.getElementById('admin-email-display').textContent = email;
+      loadUsers();
+    } catch(e) {
+      errEl.textContent = 'Incorrect email or password.';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      spinner.classList.remove('show');
+    }
+  };
+
+  window.adminLogout = async function() {
+    await signOut(auth);
+    location.reload();
+  };
+
+  // ── LOAD USERS
+  async function loadUsers() {
+    const snap = await getDocs(collection(db, 'users'));
+    allUsers = [];
+    snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
+    allUsers.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+    renderUserList();
+  }
+
+  function renderUserList() {
+    let filtered = allUsers;
+    if (currentFilter !== 'all') {
+      filtered = filtered.filter(u => u.status === currentFilter);
+    }
+    if (currentSearch) {
+      const s = currentSearch.toLowerCase();
+      filtered = filtered.filter(u =>
+        (u.fullname || '').toLowerCase().includes(s) ||
+        (u.email || '').toLowerCase().includes(s) ||
+        (u.phone || '').includes(s)
+      );
+    }
+
+    document.getElementById('user-count').textContent = `(${filtered.length})`;
+    const list = document.getElementById('user-list');
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:13px;">No clients found.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(u => `
+      <div class="user-item ${u.uid === selectedUid ? 'active' : ''}" onclick="selectUser('${u.uid}')">
+        <div>
+          <div class="user-item-name">${u.fullname || 'Unknown'}</div>
+          <div class="user-item-email">${u.email || ''}</div>
+        </div>
+        <div class="user-item-meta">
+          <div class="status-pill ${u.status || 'pending'}">${formatStatus(u.status)}</div>
+          <div style="margin-top:4px;">${u.created_by === 'admin' ? '🔧 admin' : '👤 self'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function formatStatus(s) {
+    const map = {
+      pending: 'Pending', pending_kyc: 'KYC Req',
+      kyc_submitted: 'KYC Sub', kyc_approved: 'Approved',
+      kyc_rejected: 'Rejected', mt5_requested: 'MT5 Req', active: 'Active'
+    };
+    return map[s] || s || 'Unknown';
+  }
+
+  window.filterUsers = function(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderUserList();
+  };
+
+  window.searchUsers = function(val) {
+    currentSearch = val;
+    renderUserList();
+  };
+
+  // ── SELECT USER
+  window.selectUser = async function(uid) {
+    selectedUid = uid;
+    renderUserList();
+    const user = allUsers.find(u => u.uid === uid);
+    if (!user) return;
+
+    document.getElementById('detail-empty').style.display = 'none';
+    const content = document.getElementById('detail-content');
+    content.classList.add('show');
+
+    const kyc = user.kyc || {};
+    const statusColor = {
+      active: 'var(--green)', kyc_approved: 'var(--green)',
+      kyc_submitted: 'var(--yellow)', mt5_requested: 'var(--yellow)',
+      kyc_rejected: 'var(--red-err)', pending: 'var(--text-muted)', pending_kyc: 'var(--text-muted)'
+    }[user.status] || 'var(--text-muted)';
+
+    content.innerHTML = `
+      <div class="detail-header">
+        <div>
+          <div class="detail-name">${user.fullname || 'Unknown'}</div>
+          <div class="detail-email">${user.email || ''} · ${user.phone || ''}</div>
+          <div style="margin-top:8px;">
+            <span class="status-pill ${user.status || 'pending'}">${formatStatus(user.status)}</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-right:10px;">${user.created_by === 'admin' ? '🔧 Created by admin' : '👤 Self registered'}</span>
+          </div>
+        </div>
+        <div class="detail-actions" id="action-btns"></div>
+      </div>
+
+      <div class="section-divider">Account Information</div>
+      <div class="info-grid" style="margin-bottom:28px;">
+        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${user.fullname || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${user.phone || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Referral Code</div><div class="info-value">${user.referral_code || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Referred By</div><div class="info-value">${user.referred_by || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Registered</div><div class="info-value">${user.created_at ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : '—'}</div></div>
+      </div>
+
+      ${kyc.fullname ? `
+      <div class="section-divider">KYC Information</div>
+      <div class="info-grid" style="margin-bottom:28px;">
+        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${kyc.fullname || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${kyc.dob || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Nationality</div><div class="info-value">${kyc.nationality || '—'}</div></div>
+        <div class="info-item"><div class="info-label">City</div><div class="info-value">${kyc.city || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Country</div><div class="info-value">${kyc.country || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Document Type</div><div class="info-value">${kyc.doc_type || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Submitted</div><div class="info-value">${kyc.submitted_at ? new Date(kyc.submitted_at.seconds * 1000).toLocaleString() : '—'}</div></div>
+      </div>
+
+      <div class="section-divider">KYC Documents</div>
+      <div class="kyc-photos" style="margin-bottom:28px;">
+        <div>
+          <div class="kyc-photo">
+            ${kyc.id_front_url ? `<img src="${kyc.id_front_url}" onclick="openLightbox('${kyc.id_front_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+          </div>
+          <div class="kyc-photo-label">ID Front</div>
+        </div>
+        <div>
+          <div class="kyc-photo">
+            ${kyc.id_back_url ? `<img src="${kyc.id_back_url}" onclick="openLightbox('${kyc.id_back_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+          </div>
+          <div class="kyc-photo-label">ID Back</div>
+        </div>
+        <div>
+          <div class="kyc-photo">
+            ${kyc.selfie_url ? `<img src="${kyc.selfie_url}" onclick="openLightbox('${kyc.selfie_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+          </div>
+          <div class="kyc-photo-label">Selfie</div>
+        </div>
+      </div>
+      ` : ''}
+
+      ${user.status === 'active' || user.mt5_login ? `
+      <div class="section-divider">MT5 Credentials</div>
+      <div class="info-grid" style="margin-bottom:28px;">
+        <div class="info-item"><div class="info-label">MT5 Login</div><div class="info-value">${user.mt5_login || '—'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password || '—'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Server</div><div class="info-value">${user.mt5_server || 'Harmonic'}</div></div>
+      </div>
+      ` : ''}
+
+      <div id="action-form-area"></div>
+    `;
+
+    // Render action buttons based on status
+    const actionBtns = document.getElementById('action-btns');
+    const actionArea = document.getElementById('action-form-area');
+
+    if (user.status === 'kyc_submitted') {
+      actionBtns.innerHTML = `
+        <button class="btn-sm green" onclick="approveKYC('${uid}')">✓ Approve KYC</button>
+        <button class="btn-sm" style="border-color:var(--red-err);color:var(--red-err);" onclick="showRejectForm('${uid}')">✗ Reject KYC</button>
+      `;
+    } else if (user.status === 'kyc_approved' || user.status === 'mt5_requested') {
+      actionBtns.innerHTML = `<button class="btn-sm green" onclick="showMT5Form('${uid}')">+ Enter MT5 Credentials</button>`;
+      showMT5Form(uid);
+    } else if (user.status === 'active') {
+      actionBtns.innerHTML = `<button class="btn-sm" onclick="showMT5Form('${uid}')">Edit MT5 Credentials</button>`;
+    }
+
+    if (user.status === 'kyc_rejected') {
+      actionBtns.innerHTML = `<button class="btn-sm green" onclick="approveKYC('${uid}')">✓ Approve KYC</button>`;
+    }
+  };
+
+  // ── APPROVE KYC
+  window.approveKYC = async function(uid) {
+    if (!confirm('Approve KYC for this client?')) return;
+    await updateDoc(doc(db, 'users', uid), { status: 'kyc_approved' });
+    const u = allUsers.find(u => u.uid === uid);
+    if (u) u.status = 'kyc_approved';
+    showToast('KYC approved successfully', 'success');
+    renderUserList();
+    selectUser(uid);
+  };
+
+  // ── REJECT KYC
+  window.showRejectForm = function(uid) {
+    document.getElementById('action-form-area').innerHTML = `
+      <div class="action-box">
+        <div class="action-box-title">Reject KYC — Enter Reason</div>
+        <textarea class="admin-textarea" id="reject-reason" placeholder="e.g. ID photo not clear, selfie doesn't match ID..."></textarea>
+        <button class="btn-sm" style="margin-top:12px;background:var(--red-err);border-color:var(--red-err);color:white;" onclick="rejectKYC('${uid}')">
+          Confirm Rejection <span class="spinner" id="reject-spinner"></span>
+        </button>
+      </div>
+    `;
+  };
+
+  window.rejectKYC = async function(uid) {
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) { alert('Please enter a rejection reason.'); return; }
+    document.getElementById('reject-spinner').classList.add('show');
+    await updateDoc(doc(db, 'users', uid), { status: 'kyc_rejected', rejection_reason: reason });
+    const u = allUsers.find(u => u.uid === uid);
+    if (u) { u.status = 'kyc_rejected'; u.rejection_reason = reason; }
+    showToast('KYC rejected', 'error');
+    renderUserList();
+    selectUser(uid);
+  };
+
+  // ── MT5 CREDENTIALS
+  window.showMT5Form = function(uid) {
+    const user = allUsers.find(u => u.uid === uid);
+    document.getElementById('action-form-area').innerHTML = `
+      <div class="action-box">
+        <div class="action-box-title">Enter MT5 Credentials</div>
+        <div class="form-row-admin">
+          <div>
+            <label class="auth-label">MT5 Login</label>
+            <input type="text" class="admin-input" id="mt5-login-input" value="${user?.mt5_login || ''}" placeholder="e.g. 206500">
+          </div>
+          <div>
+            <label class="auth-label">MT5 Password</label>
+            <input type="text" class="admin-input" id="mt5-pass-input" value="${user?.mt5_password || ''}" placeholder="e.g. Abc@12345">
+          </div>
+        </div>
+        <button class="btn-sm green" style="margin-top:4px;" onclick="saveMT5('${uid}')">
+          Save & Activate <span class="spinner" id="mt5-spinner"></span>
+        </button>
+      </div>
+    `;
+  };
+
+  window.saveMT5 = async function(uid) {
+    const login = document.getElementById('mt5-login-input').value.trim();
+    const pass = document.getElementById('mt5-pass-input').value.trim();
+    if (!login || !pass) { alert('Please enter both MT5 login and password.'); return; }
+    document.getElementById('mt5-spinner').classList.add('show');
+    await updateDoc(doc(db, 'users', uid), {
+      mt5_login: login, mt5_password: pass,
+      mt5_server: 'Harmonic', status: 'active'
+    });
+    const u = allUsers.find(u => u.uid === uid);
+    if (u) { u.mt5_login = login; u.mt5_password = pass; u.status = 'active'; }
+    showToast('MT5 credentials saved. Client is now active!', 'success');
+    renderUserList();
+    selectUser(uid);
+  };
+
+  // ── CREATE CLIENT MANUALLY
+  window.showCreateModal = function() {
+    document.getElementById('create-modal').classList.add('show');
+  };
+  window.hideCreateModal = function() {
+    document.getElementById('create-modal').classList.remove('show');
+  };
+
+  window.createClientManually = async function() {
+    const fullname = document.getElementById('c-fullname').value.trim();
+    const phone = document.getElementById('c-phone').value.trim();
+    const email = document.getElementById('c-email').value.trim();
+    const password = document.getElementById('c-password').value.trim();
+    const dob = document.getElementById('c-dob').value;
+    const nationality = document.getElementById('c-nationality').value.trim();
+    const city = document.getElementById('c-city').value.trim();
+    const country = document.getElementById('c-country').value.trim();
+    const mt5Login = document.getElementById('c-mt5-login').value.trim();
+    const mt5Pass = document.getElementById('c-mt5-password').value.trim();
+    const referredBy = document.getElementById('c-referred-by').value.trim();
+    const errEl = document.getElementById('create-error');
+
+    errEl.style.display = 'none';
+    if (!fullname || !phone || !email || !password) {
+      errEl.textContent = 'Please fill in all required fields (name, phone, email, password).';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    const btn = document.getElementById('create-btn');
+    const spinner = document.getElementById('create-spinner');
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = cred.user.uid;
+      const refCode = uid.substring(0, 8).toUpperCase();
+      const hasMT5 = mt5Login && mt5Pass;
+      const hasKYC = dob || city;
+
+      await setDoc(doc(db, 'users', uid), {
+        fullname, phone, email, uid,
+        mt5_login: mt5Login || null,
+        mt5_password: mt5Pass || null,
+        mt5_server: 'Harmonic',
+        status: hasMT5 ? 'active' : (hasKYC ? 'kyc_approved' : 'pending_kyc'),
+        referral_code: refCode,
+        referred_by: referredBy || null,
+        created_at: serverTimestamp(),
+        created_by: 'admin',
+        kyc: hasKYC ? {
+          fullname, dob, nationality, city, country,
+          doc_type: 'national_id',
+          submitted_at: serverTimestamp()
+        } : null
+      });
+
+      hideCreateModal();
+      showToast(`Client ${fullname} created successfully!`, 'success');
+      await loadUsers();
+
+    } catch(e) {
+      errEl.textContent = e.code === 'auth/email-already-in-use'
+        ? 'This email is already registered.'
+        : 'Error: ' + e.message;
+      errEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    spinner.classList.remove('show');
+  };
+
+  // ── LIGHTBOX
+  window.openLightbox = function(url) {
+    document.getElementById('lightbox-img').src = url;
+    document.getElementById('lightbox').classList.add('show');
+  };
+  window.closeLightbox = function() {
+    document.getElementById('lightbox').classList.remove('show');
+  };
+
+  // ── TOAST
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast show ${type}`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Enter key on auth
+  document.getElementById('auth-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') adminLogin();
+  });
+</script>
+
+</body>
+</html>
