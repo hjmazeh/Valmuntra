@@ -569,6 +569,25 @@
   }
 </script>
 
+<script>
+  function resendVerification() {
+    // Get current user from Firebase auth
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js").then(({ getAuth, sendEmailVerification }) => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        sendEmailVerification(user).then(() => {
+          const isAr = !document.getElementById('body').classList.contains('en');
+          alert(isAr ? 'تم إرسال رابط التفعيل على بريدك الإلكتروني.' : 'Verification email sent. Please check your inbox.');
+        }).catch(() => {
+          const isAr = !document.getElementById('body').classList.contains('en');
+          alert(isAr ? 'حدث خطأ. حاول لاحقاً.' : 'Error sending email. Try again later.');
+        });
+      }
+    });
+  }
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -602,14 +621,8 @@
 
     const data = userDoc.data();
 
-    // Check email verification
-    if (!user.emailVerified) {
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('portal-content').style.display = 'block';
-      document.getElementById('nav-name').textContent = data.fullname ? data.fullname.split(' ')[0] : '';
-      document.getElementById('card-not-verified').style.display = 'block';
-      return;
-    }
+    // Email verification check disabled temporarily
+    // if (!user.emailVerified) { ... }
 
     // Set name in nav
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
