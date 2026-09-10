@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — التحقق من الهوية</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:       #6A0C0E;
+    --red-lt:    #8B1517;
+    --red-err:   #FF4444;
+    --bg:        #111111;
+    --bg2:       #181818;
+    --bg3:       #1E1E1E;
+    --line:      rgba(255,255,255,0.07);
+    --white:     #FFFFFF;
+    --text:      #E8E8E8;
+    --text-mid:  #999999;
+    --text-muted:#666666;
+  }
+
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  label.lang-ar { display: block; }
+  label.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+  body.en label.lang-ar { display: none; }
+  body.en label.lang-en { display: block; }
+
+  /* ── NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 64px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo img { height: 140px; width: auto; margin: -28px 0; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid rgba(106,12,14,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 4px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .nav-back {
+    font-size: 13px;
+    color: var(--text-mid);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--text); }
+
+  /* ── MAIN */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .kyc-header { margin-bottom: 36px; }
+  .kyc-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  body.en .kyc-title { font-family: 'Barlow', sans-serif; font-weight: 700; }
+  .kyc-sub { font-size: 14px; font-weight: 300; color: var(--text-mid); line-height: 1.7; }
+
+  /* steps indicator */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-num.active { background: var(--red); border-color: var(--red); color: var(--white); }
+  .step-num.done { background: #22C55E; border-color: #22C55E; color: var(--white); }
+  .step-label { font-size: 12px; color: var(--text-muted); }
+  .step-label.active { color: var(--text); }
+  .step-line { flex: 1; height: 1px; background: var(--line); margin: 0 8px; }
+
+  /* ── FORM SECTIONS */
+  .form-section { display: none; }
+  .form-section.active { display: block; }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red-lt);
+    margin-bottom: 24px;
+    font-family: 'Barlow', sans-serif;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+    text-transform: uppercase;
+  }
+  .form-input, .form-select {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Almarai', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  body.en .form-input, body.en .form-select { font-family: 'Barlow', sans-serif; }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-input:focus, .form-select:focus { border-color: var(--red); }
+  .form-input.error, .form-select.error { border-color: var(--red-err); }
+  .form-select { cursor: pointer; }
+  .form-select option { background: var(--bg3); }
+
+  .form-error {
+    font-size: 12px;
+    color: var(--red-err);
+    margin-top: 6px;
+    display: none;
+  }
+  .form-error.show { display: block; }
+
+  /* ── FILE UPLOAD */
+  .upload-area {
+    border: 2px dashed var(--line);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-area:hover { border-color: var(--red); background: rgba(106,12,14,0.05); }
+  .upload-area.has-file { border-color: #22C55E; background: rgba(34,197,94,0.05); }
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 32px; margin-bottom: 10px; }
+  .upload-text { font-size: 14px; color: var(--text-mid); margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--text-muted); }
+  .upload-filename { font-size: 13px; color: #22C55E; margin-top: 8px; display: none; }
+  .upload-filename.show { display: block; }
+
+  /* ── GLOBAL ERROR */
+  .global-error {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    color: #FF8888;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    line-height: 1.6;
+  }
+  .global-error.show { display: block; }
+
+  /* ── BUTTONS */
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    justify-content: space-between;
+  }
+  .btn-primary {
+    padding: 14px 36px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'Almarai', sans-serif;
+    transition: background 0.2s;
+    flex: 1;
+  }
+  body.en .btn-primary { font-family: 'Barlow', sans-serif; }
+  .btn-primary:hover { background: var(--red-lt); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-back {
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--text-mid);
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: 'Almarai', sans-serif;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-back:hover { border-color: var(--text-muted); color: var(--text); }
+
+  .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .spinner.show { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .success-screen.show { display: block; }
+  .success-icon {
+    width: 72px; height: 72px;
+    background: rgba(34,197,94,0.1);
+    border: 2px solid rgba(34,197,94,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 32px;
+  }
+  .success-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  body.en .success-title { font-family: 'Barlow', sans-serif; font-weight: 700; }
+  .success-text { font-size: 15px; font-weight: 300; color: var(--text-mid); line-height: 1.8; margin-bottom: 32px; }
+
+  footer {
+    padding: 20px 48px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 20px; }
+    main { padding: 32px 16px 60px; }
+    .form-row { grid-template-columns: 1fr; }
+    .steps { gap: 4px; }
+    .step-label { display: none; }
+    footer { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="portal.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="portal.html" class="nav-back">
+      <span class="lang-ar">→ بوابتي</span>
+      <span class="lang-en">← My Portal</span>
+    </a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title">
+      <span class="lang-ar">تم إرسال وثائقك</span>
+      <span class="lang-en">Documents Submitted</span>
+    </h2>
+    <p class="success-text">
+      <span class="lang-ar">شكراً. سيراجع فريقنا وثائقك في أقرب وقت وستتمكن من إنشاء حساب التداول بعد اكتمال التحقق.</span>
+      <span class="lang-en">Thank you. Our team will review your documents shortly and you will be able to create a trading account once verification is complete.</span>
+    </p>
+    <a href="portal.html" style="display:inline-block;padding:14px 36px;background:var(--red);color:white;text-decoration:none;font-weight:700;font-size:14px;">
+      <span class="lang-ar">العودة للبوابة</span>
+      <span class="lang-en">Back to Portal</span>
+    </a>
+  </div>
+
+  <!-- KYC Form -->
+  <div id="kyc-form-wrap">
+
+    <div class="kyc-header">
+      <h1 class="kyc-title">
+        <span class="lang-ar">التحقق من الهوية</span>
+        <span class="lang-en">Identity Verification</span>
+      </h1>
+      <p class="kyc-sub">
+        <span class="lang-ar">أكمل الخطوات التالية للتحقق من هويتك وفتح حساب التداول</span>
+        <span class="lang-en">Complete the following steps to verify your identity and open a trading account</span>
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step-item">
+        <div class="step-num active" id="step1-num">1</div>
+        <span class="step-label active" id="step1-label">
+          <span class="lang-ar">المعلومات</span>
+          <span class="lang-en">Info</span>
+        </span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item">
+        <div class="step-num" id="step2-num">2</div>
+        <span class="step-label" id="step2-label">
+          <span class="lang-ar">الوثائق</span>
+          <span class="lang-en">Documents</span>
+        </span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item">
+        <div class="step-num" id="step3-num">3</div>
+        <span class="step-label" id="step3-label">
+          <span class="lang-ar">السيلفي</span>
+          <span class="lang-en">Selfie</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="global-error" id="global-error"></div>
+
+    <!-- STEP 1: Personal Info -->
+    <div class="form-section active" id="section-1">
+      <div class="section-title lang-ar">المعلومات الشخصية</div>
+      <div class="section-title lang-en">Personal Information</div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">الاسم الكامل</label>
+        <label class="form-label lang-en">Full Name</label>
+        <input type="text" class="form-input" id="fullname" autocomplete="name">
+        <div class="form-error" id="fullname-error">
+          <span class="lang-ar">الرجاء إدخال الاسم الكامل</span>
+          <span class="lang-en">Please enter your full name</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">تاريخ الميلاد</label>
+        <label class="form-label lang-en">Date of Birth</label>
+        <input type="date" class="form-input" id="dob" dir="ltr">
+        <div class="form-error" id="dob-error">
+          <span class="lang-ar">الرجاء إدخال تاريخ الميلاد</span>
+          <span class="lang-en">Please enter your date of birth</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">الجنسية</label>
+        <label class="form-label lang-en">Nationality</label>
+        <select class="form-select" id="nationality">
+          <option value="SY">🇸🇾 سوريا — Syria</option>
+          <option value="LB">🇱🇧 لبنان — Lebanon</option>
+          <option value="JO">🇯🇴 الأردن — Jordan</option>
+          <option value="IQ">🇮🇶 العراق — Iraq</option>
+          <option value="SA">🇸🇦 السعودية — Saudi Arabia</option>
+          <option value="AE">🇦🇪 الإمارات — UAE</option>
+          <option value="KW">🇰🇼 الكويت — Kuwait</option>
+          <option value="QA">🇶🇦 قطر — Qatar</option>
+          <option value="BH">🇧🇭 البحرين — Bahrain</option>
+          <option value="OM">🇴🇲 عُمان — Oman</option>
+          <option value="EG">🇪🇬 مصر — Egypt</option>
+          <option value="TR">🇹🇷 تركيا — Turkey</option>
+          <option value="DE">🇩🇪 ألمانيا — Germany</option>
+          <option value="SE">🇸🇪 السويد — Sweden</option>
+          <option value="OTHER">أخرى — Other</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label lang-ar">المدينة</label>
+          <label class="form-label lang-en">City</label>
+          <input type="text" class="form-input" id="city">
+          <div class="form-error" id="city-error">
+            <span class="lang-ar">الرجاء إدخال المدينة</span>
+            <span class="lang-en">Please enter your city</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label lang-ar">البلد</label>
+          <label class="form-label lang-en">Country</label>
+          <input type="text" class="form-input" id="country" value="سوريا">
+          <div class="form-error" id="country-error">
+            <span class="lang-ar">الرجاء إدخال البلد</span>
+            <span class="lang-en">Please enter your country</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" onclick="goToStep2()">
+          <span class="lang-ar">التالي</span>
+          <span class="lang-en">Next</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Documents -->
+    <div class="form-section" id="section-2">
+      <div class="section-title lang-ar">وثيقة الهوية</div>
+      <div class="section-title lang-en">Identity Document</div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">نوع الوثيقة</label>
+        <label class="form-label lang-en">Document Type</label>
+        <select class="form-select" id="doc-type">
+          <option value="national_id">
+            <span class="lang-ar">بطاقة الهوية الوطنية</span>
+            <span class="lang-en">National ID</span>
+          </option>
+          <option value="passport">
+            <span class="lang-ar">جواز السفر</span>
+            <span class="lang-en">Passport</span>
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">صورة الوثيقة (الوجه الأمامي)</label>
+        <label class="form-label lang-en">Document Photo (Front)</label>
+        <div class="upload-area" id="id-front-area">
+          <input type="file" id="id-front" accept="image/*,.pdf" onchange="handleFile('id-front', 'id-front-area', 'id-front-name')">
+          <div class="upload-icon">🪪</div>
+          <p class="upload-text lang-ar">اضغط لرفع صورة الوجه الأمامي</p>
+          <p class="upload-text lang-en">Click to upload front side photo</p>
+          <p class="upload-hint lang-ar">JPG, PNG أو PDF — بحد أقصى 5MB</p>
+          <p class="upload-hint lang-en">JPG, PNG or PDF — max 5MB</p>
+          <p class="upload-filename" id="id-front-name"></p>
+        </div>
+        <div class="form-error" id="id-front-error">
+          <span class="lang-ar">الرجاء رفع صورة الوثيقة</span>
+          <span class="lang-en">Please upload the document photo</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">صورة الوثيقة (الوجه الخلفي) — اختياري للجواز</label>
+        <label class="form-label lang-en">Document Photo (Back) — Optional for passport</label>
+        <div class="upload-area" id="id-back-area">
+          <input type="file" id="id-back" accept="image/*,.pdf" onchange="handleFile('id-back', 'id-back-area', 'id-back-name')">
+          <div class="upload-icon">🪪</div>
+          <p class="upload-text lang-ar">اضغط لرفع صورة الوجه الخلفي</p>
+          <p class="upload-text lang-en">Click to upload back side photo</p>
+          <p class="upload-hint lang-ar">JPG, PNG أو PDF — بحد أقصى 5MB</p>
+          <p class="upload-hint lang-en">JPG, PNG or PDF — max 5MB</p>
+          <p class="upload-filename" id="id-back-name"></p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-back" onclick="goToStep(1)">
+          <span class="lang-ar">السابق</span>
+          <span class="lang-en">Back</span>
+        </button>
+        <button class="btn-primary" onclick="goToStep3()">
+          <span class="lang-ar">التالي</span>
+          <span class="lang-en">Next</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Selfie -->
+    <div class="form-section" id="section-3">
+      <div class="section-title lang-ar">صورة السيلفي</div>
+      <div class="section-title lang-en">Selfie Photo</div>
+
+      <p style="font-size:14px;color:var(--text-mid);margin-bottom:24px;line-height:1.8;" class="lang-ar">
+        التقط صورة واضحة لوجهك مع إمساك وثيقة هويتك بجانب وجهك. تأكد من أن وجهك والوثيقة واضحان في الصورة.
+      </p>
+      <p style="font-size:14px;color:var(--text-mid);margin-bottom:24px;line-height:1.8;" class="lang-en">
+        Take a clear photo of your face while holding your identity document next to your face. Make sure both your face and the document are clearly visible.
+      </p>
+
+      <div class="form-group">
+        <div class="upload-area" id="selfie-area">
+          <input type="file" id="selfie" accept="image/*" capture="user" onchange="handleFile('selfie', 'selfie-area', 'selfie-name')">
+          <div class="upload-icon">🤳</div>
+          <p class="upload-text lang-ar">اضغط لالتقاط أو رفع صورة السيلفي</p>
+          <p class="upload-text lang-en">Click to take or upload selfie</p>
+          <p class="upload-hint lang-ar">JPG أو PNG — بحد أقصى 10MB</p>
+          <p class="upload-hint lang-en">JPG or PNG — max 10MB</p>
+          <p class="upload-filename" id="selfie-name"></p>
+        </div>
+        <div class="form-error" id="selfie-error">
+          <span class="lang-ar">الرجاء رفع صورة السيلفي</span>
+          <span class="lang-en">Please upload a selfie photo</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-back" onclick="goToStep(2)">
+          <span class="lang-ar">السابق</span>
+          <span class="lang-en">Back</span>
+        </button>
+        <button class="btn-primary" id="submit-btn" onclick="submitKYC()">
+          <span class="lang-ar">إرسال للمراجعة</span>
+          <span class="lang-en">Submit for Review</span>
+          <span class="spinner" id="spinner"></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>© 2026 Valmuntra Trading — Syria</footer>
+
+<script>
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+
+  function handleFile(inputId, areaId, nameId) {
+    const file = document.getElementById(inputId).files[0];
+    if (file) {
+      document.getElementById(areaId).classList.add('has-file');
+      const nameEl = document.getElementById(nameId);
+      nameEl.textContent = file.name;
+      nameEl.classList.add('show');
+    }
+  }
+
+  function goToStep(n) {
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + n).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+      const num = document.getElementById('step' + i + '-num');
+      const label = document.getElementById('step' + i + '-label');
+      num.classList.remove('active', 'done');
+      label.classList.remove('active');
+      if (i < n) { num.classList.add('done'); num.textContent = '✓'; }
+      else if (i === n) { num.classList.add('active'); num.textContent = i; label.classList.add('active'); }
+      else { num.textContent = i; }
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function goToStep2() {
+    const fullname = document.getElementById('fullname').value.trim();
+    const dob = document.getElementById('dob').value;
+    const city = document.getElementById('city').value.trim();
+    const country = document.getElementById('country').value.trim();
+    let valid = true;
+
+    document.querySelectorAll('.form-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-input').forEach(e => e.classList.remove('error'));
+
+    if (!fullname) { document.getElementById('fullname-error').classList.add('show'); document.getElementById('fullname').classList.add('error'); valid = false; }
+    if (!dob) { document.getElementById('dob-error').classList.add('show'); document.getElementById('dob').classList.add('error'); valid = false; }
+    if (!city) { document.getElementById('city-error').classList.add('show'); document.getElementById('city').classList.add('error'); valid = false; }
+    if (!country) { document.getElementById('country-error').classList.add('show'); document.getElementById('country').classList.add('error'); valid = false; }
+
+    if (valid) goToStep(2);
+  }
+
+  function goToStep3() {
+    const idFront = document.getElementById('id-front').files[0];
+    if (!idFront) {
+      document.getElementById('id-front-error').classList.add('show');
+      return;
+    }
+    goToStep(3);
+  }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra",
+    storageBucket: "valmuntra.firebasestorage.app",
+    messagingSenderId: "428772997561",
+    appId: "1:428772997561:web:9f3580df9eacc2290e9e68"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+    currentUser = user;
+
+    // Pre-fill name from Firestore
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (data.fullname) document.getElementById('fullname').value = data.fullname;
+      // If already submitted redirect back
+      if (data.status === 'kyc_submitted' || data.status === 'kyc_approved' || data.status === 'active') {
+        window.location.href = 'portal.html';
+      }
+    }
+  });
+
+  window.submitKYC = async function() {
+    const selfie = document.getElementById('selfie').files[0];
+    if (!selfie) {
+      document.getElementById('selfie-error').classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    btn.disabled = true;
+    spinner.classList.add('show');
+    document.getElementById('global-error').classList.remove('show');
+
+    try {
+      const uid = currentUser.uid;
+      const uploadFile = async (file, path) => {
+        if (!file) return null;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file);
+        return await getDownloadURL(storageRef);
+      };
+
+      const idFrontFile = document.getElementById('id-front').files[0];
+      const idBackFile = document.getElementById('id-back').files[0];
+
+      const [idFrontUrl, idBackUrl, selfieUrl] = await Promise.all([
+        uploadFile(idFrontFile, `kyc/${uid}/id_front`),
+        uploadFile(idBackFile, `kyc/${uid}/id_back`),
+        uploadFile(selfie, `kyc/${uid}/selfie`)
+      ]);
+
+      await updateDoc(doc(db, 'users', uid), {
+        status: 'kyc_submitted',
+        kyc: {
+          fullname: document.getElementById('fullname').value.trim(),
+          dob: document.getElementById('dob').value,
+          nationality: document.getElementById('nationality').value,
+          city: document.getElementById('city').value.trim(),
+          country: document.getElementById('country').value.trim(),
+          doc_type: document.getElementById('doc-type').value,
+          id_front_url: idFrontUrl,
+          id_back_url: idBackUrl || null,
+          selfie_url: selfieUrl,
+          submitted_at: serverTimestamp()
+        }
+      });
+
+      document.getElementById('kyc-form-wrap').style.display = 'none';
+      document.getElementById('success-screen').classList.add('show');
+
+    } catch(error) {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      const errEl = document.getElementById('global-error');
+      errEl.classList.add('show');
+      const isAr = !document.getElementById('body').classList.contains('en');
+      errEl.textContent = isAr ? 'حدث خطأ أثناء الرفع. تحقق من اتصالك وحاول مجدداً.' : 'An error occurred during upload. Check your connection and try again.';
+      console.error(error);
+    }
+  };
+</script>
+
+</body>
+</html>
