@@ -800,5 +800,25 @@
     }
   }
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const app = initializeApp({
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra"
+  });
+  const auth = getAuth(app);
+  onAuthStateChanged(auth, (user) => {
+    const loginBtns = document.querySelectorAll('a[href="login.html"]');
+    if (user) {
+      loginBtns.forEach(btn => {
+        btn.href = 'portal.html';
+        btn.querySelector('.lang-ar') && (btn.querySelector('.lang-ar').textContent = 'بوابتي');
+        btn.querySelector('.lang-en') && (btn.querySelector('.lang-en').textContent = 'My Portal');
+      });
+    }
+  });
+</script>
 </body>
 </html>
