@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valmuntra — تسجيل الدخول</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:       #6A0C0E;
+    --red-lt:    #8B1517;
+    --red-err:   #FF4444;
+    --bg:        #111111;
+    --bg2:       #181818;
+    --bg3:       #1E1E1E;
+    --line:      rgba(255,255,255,0.07);
+    --white:     #FFFFFF;
+    --text:      #E8E8E8;
+    --text-mid:  #999999;
+    --text-muted:#666666;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    direction: rtl;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  label.lang-ar { display: block; }
+  label.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+  body.en label.lang-ar { display: none; }
+  body.en label.lang-en { display: block; }
+
+  /* ── NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .nav-logo img { height: 220px; width: auto; margin: -45px 0; }
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .lang-toggle {
+    display: flex;
+    border: 1px solid rgba(106,12,14,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lang-btn {
+    padding: 5px 13px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .nav-back {
+    font-size: 13px;
+    color: var(--text-mid);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--text); }
+
+  /* ── MAIN */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  main::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 300px;
+    background: radial-gradient(ellipse, rgba(106,12,14,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .login-box {
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    width: 100%;
+    max-width: 440px;
+    padding: 48px 44px;
+    position: relative;
+    z-index: 1;
+  }
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 100%; height: 3px;
+    background: var(--red);
+  }
+  body.en .login-box::before { right: auto; left: 0; }
+
+  .login-title {
+    font-family: 'Almarai', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  body.en .login-title { font-family: 'Barlow', sans-serif; font-weight: 700; }
+
+  .login-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-mid);
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    font-family: 'Barlow', sans-serif;
+    text-transform: uppercase;
+  }
+  .form-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Almarai', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  body.en .form-input { font-family: 'Barlow', sans-serif; }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-input:focus { border-color: var(--red); }
+  .form-input.error { border-color: var(--red-err); }
+
+  .form-error {
+    font-size: 12px;
+    color: var(--red-err);
+    margin-top: 6px;
+    display: none;
+  }
+  .form-error.show { display: block; }
+
+  .forgot-link {
+    display: block;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-top: 6px;
+    transition: color 0.2s;
+  }
+  body:not(.en) .forgot-link { text-align: right; }
+  .forgot-link:hover { color: var(--red-lt); }
+
+  .global-error {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    color: #FF8888;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    line-height: 1.6;
+  }
+  .global-error.show { display: block; }
+
+  .form-submit {
+    width: 100%;
+    padding: 15px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Almarai', sans-serif;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, opacity 0.2s;
+    letter-spacing: 0.3px;
+  }
+  body.en .form-submit { font-family: 'Barlow', sans-serif; }
+  .form-submit:hover { background: var(--red-lt); }
+  .form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .spinner.show { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-signup {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .form-signup a { color: var(--red-lt); text-decoration: none; }
+  .form-signup a:hover { text-decoration: underline; }
+
+  /* reset password box */
+  .reset-box { display: none; }
+  .reset-box.show { display: block; }
+  .form-wrap { display: block; }
+  .form-wrap.hide { display: none; }
+
+  .success-note {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #86EFAC;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    line-height: 1.6;
+  }
+  .success-note.show { display: block; }
+
+  footer {
+    padding: 20px 60px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .nav-logo { order: 2; }
+    .nav-right { order: 1; }
+    .login-box { padding: 32px 24px; }
+    footer { padding: 20px 24px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="val_logo_light_ver.png" alt="Valmuntra">
+  </a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="index.html" class="nav-back">
+      <span class="lang-ar">→ الرئيسية</span>
+      <span class="lang-en">← Home</span>
+    </a>
+  </div>
+</nav>
+
+<main>
+  <div class="login-box">
+
+    <!-- Login Form -->
+    <div class="form-wrap" id="form-wrap">
+      <h1 class="login-title">
+        <span class="lang-ar">تسجيل الدخول</span>
+        <span class="lang-en">Sign In</span>
+      </h1>
+      <p class="login-sub">
+        <span class="lang-ar">أدخل بياناتك للوصول إلى بوابتك</span>
+        <span class="lang-en">Enter your credentials to access your portal</span>
+      </p>
+
+      <div class="global-error" id="global-error"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label lang-ar">البريد الإلكتروني</label>
+          <label class="form-label lang-en">Email Address</label>
+          <input type="email" class="form-input" id="email" placeholder="example@email.com" autocomplete="email" dir="ltr">
+          <div class="form-error" id="email-error">
+            <span class="lang-ar">الرجاء إدخال بريد إلكتروني صحيح</span>
+            <span class="lang-en">Please enter a valid email address</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label lang-ar">كلمة المرور</label>
+          <label class="form-label lang-en">Password</label>
+          <input type="password" class="form-input" id="password" placeholder="••••••••" autocomplete="current-password" dir="ltr">
+          <a href="#" class="forgot-link" id="forgot-link" onclick="showReset(event)">
+            <span class="lang-ar">نسيت كلمة المرور؟</span>
+            <span class="lang-en">Forgot password?</span>
+          </a>
+          <div class="form-error" id="password-error">
+            <span class="lang-ar">الرجاء إدخال كلمة المرور</span>
+            <span class="lang-en">Please enter your password</span>
+          </div>
+        </div>
+
+        <button type="submit" class="form-submit" id="submit-btn">
+          <span class="lang-ar">دخول</span>
+          <span class="lang-en">Sign In</span>
+          <span class="spinner" id="spinner"></span>
+        </button>
+
+        <p class="form-signup">
+          <span class="lang-ar">ليس لديك حساب؟ <a href="signup.html">إنشاء حساب جديد</a></span>
+          <span class="lang-en">Don't have an account? <a href="signup.html">Create one</a></span>
+        </p>
+      </form>
+    </div>
+
+    <!-- Reset Password -->
+    <div class="reset-box" id="reset-box">
+      <h1 class="login-title">
+        <span class="lang-ar">استعادة كلمة المرور</span>
+        <span class="lang-en">Reset Password</span>
+      </h1>
+      <p class="login-sub">
+        <span class="lang-ar">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين</span>
+        <span class="lang-en">Enter your email and we'll send you a reset link</span>
+      </p>
+
+      <div class="global-error" id="reset-error"></div>
+      <div class="success-note" id="reset-success">
+        <span class="lang-ar">تم إرسال رابط إعادة التعيين على بريدك الإلكتروني</span>
+        <span class="lang-en">Reset link sent to your email</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">البريد الإلكتروني</label>
+        <label class="form-label lang-en">Email Address</label>
+        <input type="email" class="form-input" id="reset-email" placeholder="example@email.com" dir="ltr">
+      </div>
+
+      <button class="form-submit" id="reset-btn" onclick="sendReset()">
+        <span class="lang-ar">إرسال الرابط</span>
+        <span class="lang-en">Send Reset Link</span>
+        <span class="spinner" id="reset-spinner"></span>
+      </button>
+
+      <p class="form-signup" style="margin-top:16px;">
+        <a href="#" onclick="showLogin(event)">
+          <span class="lang-ar">→ العودة لتسجيل الدخول</span>
+          <span class="lang-en">← Back to Sign In</span>
+        </a>
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer>© 2026 Valmuntra Trading — Syria</footer>
+
+<script>
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+
+  function showReset(e) {
+    e.preventDefault();
+    document.getElementById('form-wrap').classList.add('hide');
+    document.getElementById('reset-box').classList.add('show');
+  }
+
+  function showLogin(e) {
+    e.preventDefault();
+    document.getElementById('reset-box').classList.remove('show');
+    document.getElementById('form-wrap').classList.remove('hide');
+  }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
+    authDomain: "valmuntra.firebaseapp.com",
+    projectId: "valmuntra",
+    storageBucket: "valmuntra.firebasestorage.app",
+    messagingSenderId: "428772997561",
+    appId: "1:428772997561:web:9f3580df9eacc2290e9e68"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Login
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+    document.getElementById('global-error').classList.remove('show');
+
+    let valid = true;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('email-error').classList.add('show');
+      document.getElementById('email').classList.add('error');
+      valid = false;
+    }
+    if (!password) {
+      document.getElementById('password-error').classList.add('show');
+      document.getElementById('password').classList.add('error');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('submit-btn');
+    const spinner = document.getElementById('spinner');
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = 'portal.html';
+    } catch(error) {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      const errEl = document.getElementById('global-error');
+      errEl.classList.add('show');
+      const isAr = !document.getElementById('body').classList.contains('en');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errEl.textContent = isAr ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' : 'Incorrect email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errEl.textContent = isAr ? 'تم تعطيل الحساب مؤقتاً بسبب محاولات متعددة. حاول لاحقاً.' : 'Account temporarily disabled due to multiple attempts. Try again later.';
+      } else {
+        errEl.textContent = isAr ? 'حدث خطأ. الرجاء المحاولة مجدداً.' : 'An error occurred. Please try again.';
+      }
+    }
+  });
+
+  // Reset password
+  window.sendReset = async function() {
+    const email = document.getElementById('reset-email').value.trim();
+    const errEl = document.getElementById('reset-error');
+    const successEl = document.getElementById('reset-success');
+    const btn = document.getElementById('reset-btn');
+    const spinner = document.getElementById('reset-spinner');
+    const isAr = !document.getElementById('body').classList.contains('en');
+
+    errEl.classList.remove('show');
+    successEl.classList.remove('show');
+
+    if (!email) {
+      errEl.textContent = isAr ? 'الرجاء إدخال البريد الإلكتروني.' : 'Please enter your email.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      successEl.classList.add('show');
+      btn.disabled = false;
+      spinner.classList.remove('show');
+    } catch(error) {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      errEl.textContent = isAr ? 'حدث خطأ. تحقق من البريد الإلكتروني وحاول مجدداً.' : 'An error occurred. Check the email and try again.';
+      errEl.classList.add('show');
+    }
+  };
+</script>
+
+</body>
+</html>
