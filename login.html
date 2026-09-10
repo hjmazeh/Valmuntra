@@ -270,8 +270,6 @@
 
   @media (max-width: 600px) {
     nav { padding: 16px 20px; }
-    .nav-logo { order: 2; }
-    .nav-right { order: 1; }
     .login-box { padding: 32px 24px; }
     footer { padding: 20px 24px; }
   }
@@ -426,7 +424,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -439,6 +437,11 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+
+  // If already logged in, go straight to portal
+  onAuthStateChanged(auth, (user) => {
+    if (user) window.location.href = 'portal.html';
+  });
 
   // Login
   document.getElementById('login-form').addEventListener('submit', async function(e) {
