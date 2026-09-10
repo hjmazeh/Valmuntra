@@ -325,6 +325,8 @@
     footer { padding: 20px 24px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("iLZjn9PNYzglkaYKn");</script>
 </head>
 <body id="body">
 
@@ -663,6 +665,43 @@
   }
 </script>
 
+
+<script>
+  // Compress image before upload
+  function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve) => {
+      // If not an image, return as-is
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+            resolve(compressedFile);
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -723,13 +762,20 @@
         return await getDownloadURL(storageRef);
       };
 
-      const idFrontFile = document.getElementById('id-front').files[0];
-      const idBackFile = document.getElementById('id-back').files[0];
+      const idFrontRaw = document.getElementById('id-front').files[0];
+      const idBackRaw = document.getElementById('id-back').files[0];
+
+      // Compress images before upload (max 1200px, 80% quality)
+      const [idFrontFile, idBackFile, selfieFile] = await Promise.all([
+        compressImage(idFrontRaw, 1200, 0.8),
+        idBackRaw ? compressImage(idBackRaw, 1200, 0.8) : Promise.resolve(null),
+        compressImage(selfie, 1200, 0.8)
+      ]);
 
       const [idFrontUrl, idBackUrl, selfieUrl] = await Promise.all([
         uploadFile(idFrontFile, `kyc/${uid}/id_front`),
         uploadFile(idBackFile, `kyc/${uid}/id_back`),
-        uploadFile(selfie, `kyc/${uid}/selfie`)
+        uploadFile(selfieFile, `kyc/${uid}/selfie`)
       ]);
 
       await updateDoc(doc(db, 'users', uid), {
@@ -747,6 +793,19 @@
           submitted_at: serverTimestamp()
         }
       });
+
+      // Send notification email to CS team
+      try {
+        await emailjs.send('service_v3k15dz', 'template_jxmt19a', {
+          client_name: document.getElementById('fullname').value.trim(),
+          client_email: currentUser.email,
+          client_phone: '',
+          submitted_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' }),
+          message: 'New KYC submission received. Login to review: https://valmuntra.com/admin.html'
+        });
+      } catch(emailErr) {
+        console.log('Email notification failed:', emailErr);
+      }
 
       document.getElementById('kyc-form-wrap').style.display = 'none';
       document.getElementById('success-screen').classList.add('show');
