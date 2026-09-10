@@ -121,6 +121,19 @@
     font-family: 'Barlow', sans-serif; transition: all 0.2s;
   }
   .filter-tab.active { background: var(--red); border-color: var(--red); color: var(--white); }
+  .filter-badge {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 10px;
+    margin-right: 4px;
+    min-width: 16px;
+    text-align: center;
+  }
+  .filter-tab.active .filter-badge { background: rgba(255,255,255,0.3); }
 
   .search-box {
     width: 100%; padding: 10px 16px; margin-top: 10px;
@@ -309,12 +322,12 @@
       <div class="panel-header">
         <h2>Clients <span id="user-count" style="color:var(--text-muted);font-weight:400;"></span></h2>
         <div class="filter-tabs">
-          <button class="filter-tab active" onclick="filterUsers('all', this)">All</button>
-          <button class="filter-tab" onclick="filterUsers('kyc_submitted', this)">KYC Pending</button>
-          <button class="filter-tab" onclick="filterUsers('kyc_approved', this)">Approved</button>
-          <button class="filter-tab" onclick="filterUsers('mt5_requested', this)">MT5 Req</button>
-          <button class="filter-tab" onclick="filterUsers('active', this)">Active</button>
-          <button class="filter-tab" onclick="filterUsers('kyc_rejected', this)">Rejected</button>
+          <button class="filter-tab active" onclick="filterUsers('all', this)">All <span class="filter-badge" id="badge-all"></span></button>
+          <button class="filter-tab" onclick="filterUsers('kyc_submitted', this)">KYC Pending <span class="filter-badge" id="badge-kyc_submitted"></span></button>
+          <button class="filter-tab" onclick="filterUsers('kyc_approved', this)">Approved <span class="filter-badge" id="badge-kyc_approved"></span></button>
+          <button class="filter-tab" onclick="filterUsers('mt5_requested', this)">MT5 Req <span class="filter-badge" id="badge-mt5_requested"></span></button>
+          <button class="filter-tab" onclick="filterUsers('active', this)">Active <span class="filter-badge" id="badge-active"></span></button>
+          <button class="filter-tab" onclick="filterUsers('kyc_rejected', this)">Rejected <span class="filter-badge" id="badge-kyc_rejected"></span></button>
         </div>
         <input type="text" class="search-box" placeholder="Search by name or email..." oninput="searchUsers(this.value)">
       </div>
@@ -505,6 +518,17 @@
     }
 
     document.getElementById('user-count').textContent = `(${filtered.length})`;
+
+    // Update badges
+    const statuses = ['kyc_submitted','kyc_approved','mt5_requested','active','kyc_rejected'];
+    statuses.forEach(s => {
+      const count = allUsers.filter(u => u.status === s).length;
+      const badge = document.getElementById('badge-' + s);
+      if (badge) { badge.textContent = count > 0 ? count : ''; badge.style.display = count > 0 ? 'inline-block' : 'none'; }
+    });
+    const allBadge = document.getElementById('badge-all');
+    if (allBadge) { allBadge.textContent = allUsers.length; allBadge.style.display = 'inline-block'; }
+
     const list = document.getElementById('user-list');
 
     if (filtered.length === 0) {
