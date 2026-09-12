@@ -485,7 +485,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, serverTimestamp, query, orderBy, deleteField, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -1057,8 +1057,16 @@
     spinner.classList.add('show');
 
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      // Creating a user with the admin's own auth instance would silently
+      // sign the admin OUT and into the new client's account instead — a
+      // well-known Firebase client-SDK gotcha. A throwaway secondary app
+      // instance keeps the admin's real session untouched.
+      const secondaryApp = initializeApp(firebaseConfig, 'client-creator-' + Date.now());
+      const secondaryAuth = getAuth(secondaryApp);
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       const uid = cred.user.uid;
+      await signOut(secondaryAuth);
+      await deleteApp(secondaryApp);
       const refCode = uid.substring(0, 8).toUpperCase();
       const hasKYC = dob || city;
       let hasMT5 = mt5Login && mt5Pass;
