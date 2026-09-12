@@ -889,7 +889,7 @@
     try {
       // Email the credentials directly to the client. The password is never
       // stored in the database — only sent this once, here.
-      await emailjs.send('service_8jq7frq', 'template_jxmt19a', {
+      await emailjs.send('service_0oshg5a', 'template_jxmt19a', {
         to_email: user.email,
         client_name: user.fullname || '',
         mt5_login: login,
@@ -974,7 +974,7 @@
 
       if (hasMT5) {
         try {
-          await emailjs.send('service_8jq7frq', 'template_jxmt19a', {
+          await emailjs.send('service_0oshg5a', 'template_jxmt19a', {
             to_email: email,
             client_name: fullname,
             mt5_login: mt5Login,
