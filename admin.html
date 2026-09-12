@@ -260,6 +260,19 @@
   .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
   .modal-close:hover { color: var(--text); }
 
+  /* referral tree */
+  .tree-node { position: relative; }
+  .tree-node-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 2px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .tree-node-row:hover { background: var(--bg3); }
+  .tree-node-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .tree-node-code { font-size: 11px; color: var(--text-muted); font-family: 'Barlow', sans-serif; }
+  .tree-children { margin-inline-start: 22px; border-inline-start: 1px solid var(--line); padding-inline-start: 14px; }
+  .tree-empty { color: var(--text-muted); font-size: 13px; padding: 20px; text-align: center; }
+
   .spinner {
     display: none; width: 14px; height: 14px;
     border: 2px solid rgba(128,128,128,0.3);
@@ -318,6 +331,7 @@
     <div class="admin-nav-title">Valmuntra <span>Admin Panel</span></div>
     <div class="admin-nav-right">
       <span class="admin-user-email" id="admin-email-display"></span>
+      <button class="btn-sm" onclick="showReferralTree()">🌳 Referral Tree</button>
       <button class="btn-sm red" onclick="showCreateModal()">+ Create Client</button>
       <button class="btn-sm" onclick="adminLogout()">Logout</button>
     </div>
@@ -445,6 +459,20 @@
     <button class="auth-btn" style="margin-top:20px;" id="create-btn" onclick="createClientManually()">
       Create Client <span class="spinner" id="create-spinner"></span>
     </button>
+  </div>
+</div>
+
+<!-- Referral Tree -->
+<div class="modal-overlay" id="tree-modal">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-title">
+      Referral Tree
+      <button class="modal-close" onclick="hideReferralTree()">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line);">
+      Structure only — dollar amounts aren't calculated here yet (that needs live MT5 trading data, not connected to this system). Rule for reference: a client's <strong style="color:var(--text);">direct referrer</strong> earns full rate on their trades; that referrer's <strong style="color:var(--text);">own referrer</strong> earns a reduced rate; anyone further up earns nothing from that client.
+    </p>
+    <div id="tree-content" style="max-height:60vh;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -612,9 +640,9 @@
     list.innerHTML = filtered.map(u => `
       <div class="user-item ${u.uid === selectedUid ? 'active' : ''}" onclick="selectUser('${u.uid}')">
         <div>
-          <div class="user-item-name">${u.fullname || 'Unknown'}</div>
-          <div class="user-item-email">${u.email || ''}</div>
-          ${currentFilter === 'duplicate_phone' && u.phone ? `<div class="user-item-email" style="color:var(--yellow);">\u{1F4F1} ${u.phone}</div>` : ''}
+          <div class="user-item-name">${escapeHtml(u.fullname) || 'Unknown'}</div>
+          <div class="user-item-email">${escapeHtml(u.email)}</div>
+          ${currentFilter === 'duplicate_phone' && u.phone ? `<div class="user-item-email" style="color:var(--yellow);">\u{1F4F1} ${escapeHtml(u.phone)}</div>` : ''}
         </div>
         <div class="user-item-meta">
           <div class="status-pill ${u.status || 'pending'}">${formatStatus(u.status)}</div>
@@ -622,6 +650,19 @@
         </div>
       </div>
     `).join('');
+  }
+
+  // Client-typed data must never be inserted into innerHTML without this —
+  // otherwise a "name" like <img src=x onerror=...> would execute as real
+  // code in whichever admin's browser opens that client's profile.
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function formatStatus(s) {
@@ -666,10 +707,10 @@
     content.innerHTML = `
       <div class="detail-header">
         <div>
-          <div class="detail-name">${user.fullname || 'Unknown'}</div>
+          <div class="detail-name">${escapeHtml(user.fullname) || 'Unknown'}</div>
           <div class="detail-email">
-            ${user.email ? `<a href="mailto:${user.email}" style="color:inherit;text-decoration:none;">✉️ ${user.email}</a>` : ''}
-            ${user.phone ? ` · <a href="https://wa.me/${user.phone.replace(/[^\d]/g, '')}" target="_blank" style="color:var(--green);text-decoration:none;">💬 ${user.phone}</a>` : ''}
+            ${user.email ? `<a href="mailto:${escapeHtml(user.email)}" style="color:inherit;text-decoration:none;">✉️ ${escapeHtml(user.email)}</a>` : ''}
+            ${user.phone ? ` · <a href="https://wa.me/${user.phone.replace(/[^\d]/g, '')}" target="_blank" style="color:var(--green);text-decoration:none;">💬 ${escapeHtml(user.phone)}</a>` : ''}
           </div>
           <div style="margin-top:8px;">
             <span class="status-pill ${user.status || 'pending'}">${formatStatus(user.status)}</span>
@@ -681,29 +722,29 @@
 
       <div class="section-divider">Account Information</div>
       <div class="info-grid" style="margin-bottom:28px;">
-        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${user.fullname || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${user.phone || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${escapeHtml(user.fullname) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Email</div><div class="info-value">${escapeHtml(user.email) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${escapeHtml(user.phone) || '—'}</div></div>
         <div class="info-item">
           <div class="info-label">Referral Code</div>
           <div class="info-value">
-            ${user.referral_code || '—'}
-            ${user.referral_code ? `<button class="btn-sm" style="padding:2px 8px;font-size:10px;margin-right:8px;" onclick="copyPlainText('${user.referral_code}')">Copy</button>` : ''}
+            ${escapeHtml(user.referral_code) || '—'}
+            ${user.referral_code ? `<button class="btn-sm" style="padding:2px 8px;font-size:10px;margin-right:8px;" onclick="copyPlainText('${escapeHtml(user.referral_code)}')">Copy</button>` : ''}
           </div>
         </div>
-        <div class="info-item"><div class="info-label">Referred By</div><div class="info-value">${user.referred_by || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Referred By</div><div class="info-value">${escapeHtml(user.referred_by) || '—'}</div></div>
         <div class="info-item"><div class="info-label">Registered</div><div class="info-value">${user.created_at ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : '—'}</div></div>
       </div>
 
       ${kyc.fullname ? `
       <div class="section-divider">KYC Information</div>
       <div class="info-grid" style="margin-bottom:28px;">
-        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${kyc.fullname || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${kyc.dob || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Nationality</div><div class="info-value">${kyc.nationality || '—'}</div></div>
-        <div class="info-item"><div class="info-label">City</div><div class="info-value">${kyc.city || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Country</div><div class="info-value">${kyc.country || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Document Type</div><div class="info-value">${kyc.doc_type || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${escapeHtml(kyc.fullname) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${escapeHtml(kyc.dob) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Nationality</div><div class="info-value">${escapeHtml(kyc.nationality) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">City</div><div class="info-value">${escapeHtml(kyc.city) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Country</div><div class="info-value">${escapeHtml(kyc.country) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Document Type</div><div class="info-value">${escapeHtml(kyc.doc_type) || '—'}</div></div>
         <div class="info-item"><div class="info-label">Submitted</div><div class="info-value">${kyc.submitted_at ? new Date(kyc.submitted_at.seconds * 1000).toLocaleString() : '—'}</div></div>
       </div>
 
@@ -711,19 +752,19 @@
       <div class="kyc-photos" style="margin-bottom:28px;">
         <div>
           <div class="kyc-photo">
-            ${kyc.id_front_url ? `<img src="${kyc.id_front_url}" onclick="openLightbox('${kyc.id_front_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+            ${kyc.id_front_url ? `<img src="${escapeHtml(kyc.id_front_url)}" data-lightbox-url="${escapeHtml(kyc.id_front_url)}" onclick="openLightbox(this.dataset.lightboxUrl)">` : '<div class="kyc-photo-null">No image</div>'}
           </div>
           <div class="kyc-photo-label">ID Front</div>
         </div>
         <div>
           <div class="kyc-photo">
-            ${kyc.id_back_url ? `<img src="${kyc.id_back_url}" onclick="openLightbox('${kyc.id_back_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+            ${kyc.id_back_url ? `<img src="${escapeHtml(kyc.id_back_url)}" data-lightbox-url="${escapeHtml(kyc.id_back_url)}" onclick="openLightbox(this.dataset.lightboxUrl)">` : '<div class="kyc-photo-null">No image</div>'}
           </div>
           <div class="kyc-photo-label">ID Back</div>
         </div>
         <div>
           <div class="kyc-photo">
-            ${kyc.selfie_url ? `<img src="${kyc.selfie_url}" onclick="openLightbox('${kyc.selfie_url}')">` : '<div class="kyc-photo-null">No image</div>'}
+            ${kyc.selfie_url ? `<img src="${escapeHtml(kyc.selfie_url)}" data-lightbox-url="${escapeHtml(kyc.selfie_url)}" onclick="openLightbox(this.dataset.lightboxUrl)">` : '<div class="kyc-photo-null">No image</div>'}
           </div>
           <div class="kyc-photo-label">Selfie</div>
         </div>
@@ -733,9 +774,9 @@
       ${user.status === 'active' || user.mt5_login ? `
       <div class="section-divider">MT5 Credentials</div>
       <div class="info-grid" style="margin-bottom:28px;">
-        <div class="info-item"><div class="info-label">MT5 Login</div><div class="info-value">${user.mt5_login || '—'}</div></div>
-        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password ? user.mt5_password + ' (legacy — will clear on next save)' : 'Sent via email'}</div></div>
-        <div class="info-item"><div class="info-label">MT5 Server</div><div class="info-value">${user.mt5_server || 'Harmonic'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Login</div><div class="info-value">${escapeHtml(user.mt5_login) || '—'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password ? escapeHtml(user.mt5_password) + ' (legacy — will clear on next save)' : 'Sent via email'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Server</div><div class="info-value">${escapeHtml(user.mt5_server) || 'Harmonic'}</div></div>
       </div>
       ` : ''}
 
@@ -744,7 +785,7 @@
       <div style="margin-bottom:28px;">
         ${user.mt5_history.slice().reverse().map(h => `
           <div style="font-size:13px;color:var(--text-muted);padding:8px 0;border-bottom:1px solid var(--line);">
-            Login <strong style="color:var(--white);">${h.login}</strong> (${h.server}) — replaced ${new Date(h.replaced_at).toLocaleDateString()}
+            Login <strong style="color:var(--white);">${escapeHtml(h.login)}</strong> (${escapeHtml(h.server)}) — replaced ${new Date(h.replaced_at).toLocaleDateString()}
           </div>
         `).join('')}
       </div>
@@ -863,7 +904,7 @@
         <div class="form-row-admin">
           <div>
             <label class="auth-label">MT5 Login</label>
-            <input type="text" class="admin-input" id="mt5-login-input" value="${user?.mt5_login || ''}" placeholder="e.g. 206500">
+            <input type="text" class="admin-input" id="mt5-login-input" value="${escapeHtml(user?.mt5_login) || ''}" placeholder="e.g. 206500">
           </div>
           <div>
             <label class="auth-label">MT5 Password</label>
@@ -936,6 +977,57 @@
   };
   window.hideCreateModal = function() {
     document.getElementById('create-modal').classList.remove('show');
+  };
+
+  // ── REFERRAL TREE
+  // Structure only — no payout math here. That needs live MT5 trading data,
+  // which this system doesn't have yet.
+  function renderTreeNode(user, childrenMap) {
+    const kids = childrenMap[user.referral_code] || [];
+    return `
+      <div class="tree-node">
+        <div class="tree-node-row" onclick="jumpToClientFromTree('${user.uid}')">
+          <span class="status-pill ${user.status || 'pending'}">${formatStatus(user.status)}</span>
+          <span class="tree-node-name">${escapeHtml(user.fullname) || 'Unknown'}</span>
+          <span class="tree-node-code">${escapeHtml(user.referral_code)}</span>
+        </div>
+        ${kids.length ? `<div class="tree-children">${kids.map(k => renderTreeNode(k, childrenMap)).join('')}</div>` : ''}
+      </div>
+    `;
+  }
+
+  window.showReferralTree = function() {
+    const byCode = {};
+    allUsers.forEach(u => { if (u.referral_code) byCode[u.referral_code] = u; });
+
+    const childrenMap = {};
+    allUsers.forEach(u => {
+      if (u.referred_by && byCode[u.referred_by]) {
+        (childrenMap[u.referred_by] = childrenMap[u.referred_by] || []).push(u);
+      }
+    });
+
+    // Roots: anyone with no referrer, or whose referrer code doesn't match a real client
+    const roots = allUsers.filter(u => !u.referred_by || !byCode[u.referred_by]);
+    // Only show roots that actually have someone under them — an isolated
+    // client with no referrals adds noise, not signal, to this view.
+    const rootsWithReferrals = roots.filter(u => u.referral_code && childrenMap[u.referral_code]);
+
+    const content = document.getElementById('tree-content');
+    content.innerHTML = rootsWithReferrals.length
+      ? rootsWithReferrals.map(r => renderTreeNode(r, childrenMap)).join('')
+      : '<div class="tree-empty">No referrals yet.</div>';
+
+    document.getElementById('tree-modal').classList.add('show');
+  };
+
+  window.hideReferralTree = function() {
+    document.getElementById('tree-modal').classList.remove('show');
+  };
+
+  window.jumpToClientFromTree = function(uid) {
+    hideReferralTree();
+    selectUser(uid);
   };
 
   window.createClientManually = async function() {
