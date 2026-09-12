@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valmuntra — إنشاء حساب</title>
+<meta name="description" content="افتح حساب تداول مع Valmuntra، وسيط تداول سوري معتمد لمنصة Harmonic. تداول واجنِ الأرباح بأمان وشفافية.">
+<meta property="og:title" content="Valmuntra — إنشاء حساب">
+<meta property="og:description" content="افتح حساب تداول مع Valmuntra، وسيط تداول سوري معتمد لمنصة Harmonic. تداول واجنِ الأرباح بأمان وشفافية.">
+<meta property="og:type" content="website">
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -61,6 +65,7 @@
   .nav-right { display: flex; align-items: center; gap: 20px; }
   .lang-toggle {
     display: flex;
+    flex-shrink: 0;
     border: 1px solid rgba(106,12,14,0.3);
     border-radius: 3px;
     overflow: hidden;
@@ -76,6 +81,8 @@
     cursor: pointer;
     transition: all 0.2s;
     font-family: 'Barlow', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .lang-btn.active { background: var(--red); color: var(--white); }
   .nav-back {
@@ -86,6 +93,7 @@
     align-items: center;
     gap: 6px;
     transition: color 0.2s;
+    min-width: 0;
   }
   .nav-back:hover { color: var(--text); }
 

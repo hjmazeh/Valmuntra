@@ -317,7 +317,8 @@
   }
 
   @media (max-width: 600px) {
-    nav { padding: 0 20px; }
+    nav { padding: 10px 16px; height: auto; }
+    .nav-logo img { height: 48px; margin: -6px 0; }
     main { padding: 32px 16px 60px; }
     .form-row { grid-template-columns: 1fr; }
     .steps { gap: 4px; }
@@ -797,6 +798,7 @@
       // Send notification email to CS team
       try {
         await emailjs.send('service_0oshg5a', 'template_k00znup', {
+          subject: 'New KYC Submission — ' + document.getElementById('fullname').value.trim(),
           client_name: document.getElementById('fullname').value.trim(),
           client_email: currentUser.email,
           client_phone: '',

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valmuntra — بوابتي</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("iLZjn9PNYzglkaYKn");</script>
 <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -356,7 +358,11 @@
   .loading-text { font-size: 13px; color: var(--text-muted); }
 
   @media (max-width: 600px) {
-    nav { padding: 0 20px; }
+    nav { padding: 10px 16px; height: auto; flex-wrap: wrap; row-gap: 10px; margin-bottom: 8px; }
+    .nav-logo img { height: 48px; margin: -6px 0; }
+    .nav-right { flex-wrap: wrap; gap: 10px; width: 100%; justify-content: space-between; }
+    .nav-user { flex-direction: column; align-items: flex-start; gap: 2px; }
+    #nav-email { margin-inline-start: 0; display: block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .portal-wrap { padding: 24px 16px 60px; }
     .status-card, .mt5-card, .referral-card, .funding-card { padding: 24px 20px; }
     .mt5-fields { grid-template-columns: 1fr; }
@@ -373,6 +379,7 @@
       <span class="lang-ar">مرحباً، </span>
       <span class="lang-en">Hello, </span>
       <strong id="nav-name">...</strong>
+      <span id="nav-email" dir="ltr" style="color:var(--text-muted);font-size:11px;margin-inline-start:8px;"></span>
     </div>
     <div class="lang-toggle">
       <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
@@ -484,8 +491,12 @@
           </div>
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.7;">
-          <span class="lang-ar">تم إرسال كلمة المرور إلى بريدك الإلكتروني عند تفعيل حسابك. تحتاج إعادة إرسالها؟ تواصل مع الدعم.</span>
-          <span class="lang-en">Your password was emailed to you when your account was activated. Need it resent? Contact support.</span>
+          <span class="lang-ar">تم إرسال كلمة المرور إلى بريدك الإلكتروني عند تفعيل حسابك. تحتاج إعادة إرسالها؟</span>
+          <span class="lang-en">Your password was emailed to you when your account was activated. Need it resent?</span>
+          <a href="#" id="whatsapp-resend-link" target="_blank" rel="noopener" style="color:var(--green);text-decoration:none;font-weight:700;">
+            <span class="lang-ar">تواصل معنا عبر واتساب</span>
+            <span class="lang-en">Contact us on WhatsApp</span>
+          </a>
         </p>
       </div>
 
@@ -615,9 +626,11 @@
 
     const data = userDoc.data();
 
-    // Set name in nav
+    // Set name and email in nav — the email matters for clients who have
+    // more than one portal account, so they know which one they're in.
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
     document.getElementById('nav-name').textContent = firstName;
+    document.getElementById('nav-email').textContent = '(' + user.email + ')';
 
     // Hide loading, show content
     document.getElementById('loading-screen').style.display = 'none';
@@ -656,6 +669,11 @@
       document.getElementById('card-active').style.display = 'block';
       document.getElementById('mt5-login').textContent = data.mt5_login || '—';
       document.getElementById('mt5-server').textContent = data.mt5_server || 'Harmonic';
+      // WhatsApp password-resend request, pre-filled so support can identify the client immediately
+      const waMessage = encodeURIComponent(
+        `Hi, I'd like to request my MT5 password be resent.\nName: ${data.fullname || ''}\nEmail: ${data.email || user.email}\nReferral code: ${data.referral_code || ''}`
+      );
+      document.getElementById('whatsapp-resend-link').href = `https://wa.me/35794591707?text=${waMessage}`;
       // Referral link
       const refCode = data.referral_code || '';
       document.getElementById('referral-link-text').textContent = 'https://valmuntra.com/signup.html?ref=' + refCode;
@@ -667,6 +685,21 @@
       await updateDoc(doc(db, 'users', user.uid), { status: 'mt5_requested', mt5_requested_at: serverTimestamp() });
       document.getElementById('card-kyc-approved').style.display = 'none';
       document.getElementById('card-mt5-requested').style.display = 'block';
+
+      // Notify the team, same as the KYC-submission notification. Best-effort:
+      // a failed email shouldn't block the client's request from going through.
+      try {
+        await emailjs.send('service_0oshg5a', 'template_k00znup', {
+          subject: 'MT5 Account Requested — ' + (data.fullname || ''),
+          client_name: data.fullname || '',
+          client_email: user.email,
+          client_phone: data.phone || '',
+          submitted_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' }),
+          message: 'Client is KYC-approved and has requested an MT5 account. Login to review: https://valmuntra.com/admin.html'
+        });
+      } catch (emailErr) {
+        console.log('MT5 request notification failed:', emailErr);
+      }
     };
 
     // Logout
