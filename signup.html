@@ -345,8 +345,8 @@
         <span class="lang-en">Account Created!</span>
       </h2>
       <p class="success-text">
-        <span class="lang-ar">شكراً لتسجيلك في Valmuntra. سيتواصل معك فريقنا قريباً على بريدك الإلكتروني لإرسال بيانات حساب MT5 الخاص بك.</span>
-        <span class="lang-en">Thank you for registering with Valmuntra. Our team will contact you shortly at your email with your MT5 account details.</span>
+        <span class="lang-ar">شكراً لتسجيلك في Valmuntra. أرسلنا رابط تفعيل إلى بريدك الإلكتروني — يرجى الضغط عليه لتفعيل حسابك قبل تسجيل الدخول.</span>
+        <span class="lang-en">Thank you for registering with Valmuntra. We've sent a verification link to your email — please click it to activate your account before you can sign in.</span>
       </p>
       <a href="index.html" style="display:inline-block;padding:13px 32px;background:var(--red);color:white;text-decoration:none;font-weight:700;font-size:14px;">
         <span class="lang-ar">العودة للرئيسية</span>
@@ -538,6 +538,7 @@
       await sendEmailVerification(user);
 
       // Save user data in Firestore
+      const referredBy = new URLSearchParams(window.location.search).get('ref');
       await setDoc(doc(db, 'users', user.uid), {
         fullname: fullname,
         phone: phoneCode + phone,
@@ -548,7 +549,7 @@
         mt5_server: 'Harmonic',
         status: 'pending',
         referral_code: user.uid.substring(0, 8).toUpperCase(),
-        referred_by: null,
+        referred_by: referredBy ? referredBy.trim().toUpperCase() : null,
         created_at: serverTimestamp()
       });
 

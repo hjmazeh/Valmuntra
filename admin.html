@@ -5,23 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valmuntra — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("iLZjn9PNYzglkaYKn");</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --red:       #6A0C0E;
     --red-lt:    #8B1517;
-    --bg:        #111111;
-    --bg2:       #181818;
-    --bg3:       #1E1E1E;
-    --line:      rgba(255,255,255,0.07);
-    --white:     #FFFFFF;
-    --text:      #E8E8E8;
-    --text-mid:  #999999;
-    --text-muted:#666666;
-    --green:     #22C55E;
-    --yellow:    #F59E0B;
-    --red-err:   #FF4444;
+    --bg:        #EEF0F2;
+    --bg2:       #F8F9FB;
+    --bg3:       #FFFFFF;
+    --line:      rgba(0,0,0,0.09);
+    --white:     #14171C;
+    --text:      #383B42;
+    --text-mid:  #6B7280;
+    --text-muted:#94989E;
+    --green:     #157F3B;
+    --yellow:    #B45309;
+    --red-err:   #DC2626;
   }
 
   body {
@@ -59,7 +61,7 @@
   .auth-input:focus { border-color: var(--red); }
   .auth-btn {
     width: 100%; padding: 13px;
-    background: var(--red); color: var(--white);
+    background: var(--red); color: #FFFFFF;
     font-size: 14px; font-weight: 700; border: none; cursor: pointer;
     transition: background 0.2s;
   }
@@ -90,10 +92,17 @@
     transition: all 0.2s;
   }
   .btn-sm:hover { border-color: var(--red); color: var(--text); }
-  .btn-sm.red { background: var(--red); border-color: var(--red); color: var(--white); }
+  .btn-sm.red { background: var(--red); border-color: var(--red); color: #FFFFFF; }
   .btn-sm.red:hover { background: var(--red-lt); }
   .btn-sm.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
   .btn-sm.green:hover { background: rgba(34,197,94,0.2); }
+
+  /* stats bar */
+  .stats-bar { display: flex; gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .stat-tile { flex: 1; background: var(--bg2); padding: 14px 24px; }
+  .stat-tile-value { font-size: 22px; font-weight: 700; color: var(--white); font-family: 'Barlow', sans-serif; }
+  .stat-tile-value.alert { color: var(--yellow); }
+  .stat-tile-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
   /* body split */
   .admin-body { display: flex; flex: 1; overflow: hidden; }
@@ -120,7 +129,7 @@
     color: var(--text-muted); cursor: pointer; border-radius: 2px;
     font-family: 'Barlow', sans-serif; transition: all 0.2s;
   }
-  .filter-tab.active { background: var(--red); border-color: var(--red); color: var(--white); }
+  .filter-tab.active { background: var(--red); border-color: var(--red); color: #FFFFFF; }
   .filter-badge {
     display: inline-block;
     background: var(--red);
@@ -253,8 +262,8 @@
 
   .spinner {
     display: none; width: 14px; height: 14px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white; border-radius: 50%;
+    border: 2px solid rgba(128,128,128,0.3);
+    border-top-color: currentColor; border-radius: 50%;
     animation: spin 0.7s linear infinite;
     margin-left: 8px; vertical-align: middle;
   }
@@ -314,6 +323,22 @@
     </div>
   </div>
 
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-tile">
+      <div class="stat-tile-value" id="stat-action-needed">—</div>
+      <div class="stat-tile-label">Awaiting Your Action</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-value" id="stat-new-today">—</div>
+      <div class="stat-tile-label">New Today</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-value" id="stat-active">—</div>
+      <div class="stat-tile-label">Active Clients</div>
+    </div>
+  </div>
+
   <!-- Body -->
   <div class="admin-body">
 
@@ -328,8 +353,9 @@
           <button class="filter-tab" onclick="filterUsers('mt5_requested', this)">MT5 Req <span class="filter-badge" id="badge-mt5_requested"></span></button>
           <button class="filter-tab" onclick="filterUsers('active', this)">Active <span class="filter-badge" id="badge-active"></span></button>
           <button class="filter-tab" onclick="filterUsers('kyc_rejected', this)">Rejected <span class="filter-badge" id="badge-kyc_rejected"></span></button>
+          <button class="filter-tab" onclick="filterUsers('duplicate_phone', this)" style="border-color:rgba(180,83,9,0.4);">⚠ Duplicate Phones <span class="filter-badge" id="badge-duplicate_phone"></span></button>
         </div>
-        <input type="text" class="search-box" placeholder="Search by name or email..." oninput="searchUsers(this.value)">
+        <input type="text" class="search-box" placeholder="Search by name, email, phone, or referral code..." oninput="searchUsers(this.value)">
       </div>
       <div class="user-list" id="user-list">
         <div style="padding:20px;color:var(--text-muted);font-size:13px;">Loading...</div>
@@ -433,7 +459,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, serverTimestamp, query, orderBy, deleteField, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -503,9 +529,38 @@
     renderUserList();
   }
 
+  function updateStatsBar() {
+    const actionNeeded = allUsers.filter(u => u.status === 'kyc_submitted' || u.status === 'mt5_requested').length;
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const newToday = allUsers.filter(u => u.created_at && (u.created_at.seconds * 1000) >= todayStart.getTime()).length;
+    const active = allUsers.filter(u => u.status === 'active').length;
+
+    const actionEl = document.getElementById('stat-action-needed');
+    actionEl.textContent = actionNeeded;
+    actionEl.className = 'stat-tile-value' + (actionNeeded > 0 ? ' alert' : '');
+    document.getElementById('stat-new-today').textContent = newToday;
+    document.getElementById('stat-active').textContent = active;
+  }
+
+  function getDuplicatePhones() {
+    const counts = {};
+    allUsers.forEach(u => {
+      const phone = (u.phone || '').trim();
+      if (!phone) return;
+      counts[phone] = (counts[phone] || 0) + 1;
+    });
+    return new Set(Object.keys(counts).filter(p => counts[p] >= 2));
+  }
+
   function renderUserList() {
+    updateStatsBar();
+
     let filtered = allUsers;
-    if (currentFilter !== 'all') {
+    if (currentFilter === 'duplicate_phone') {
+      const dupPhones = getDuplicatePhones();
+      filtered = filtered.filter(u => dupPhones.has((u.phone || '').trim()));
+    } else if (currentFilter !== 'all') {
       filtered = filtered.filter(u => u.status === currentFilter);
     }
     if (currentSearch) {
@@ -513,8 +568,21 @@
       filtered = filtered.filter(u =>
         (u.fullname || '').toLowerCase().includes(s) ||
         (u.email || '').toLowerCase().includes(s) ||
-        (u.phone || '').includes(s)
+        (u.phone || '').includes(s) ||
+        (u.referral_code || '').toLowerCase().includes(s)
       );
+    }
+
+    // Queues that need your action show the longest-waiting client first,
+    // so nobody gets buried under newer signups.
+    if (currentFilter === 'kyc_submitted') {
+      filtered = [...filtered].sort((a, b) =>
+        (a.kyc?.submitted_at?.seconds ?? a.created_at?.seconds ?? 0) -
+        (b.kyc?.submitted_at?.seconds ?? b.created_at?.seconds ?? 0));
+    } else if (currentFilter === 'mt5_requested') {
+      filtered = [...filtered].sort((a, b) =>
+        (a.mt5_requested_at?.seconds ?? a.created_at?.seconds ?? 0) -
+        (b.mt5_requested_at?.seconds ?? b.created_at?.seconds ?? 0));
     }
 
     document.getElementById('user-count').textContent = `(${filtered.length})`;
@@ -529,6 +597,11 @@
     const allBadge = document.getElementById('badge-all');
     if (allBadge) { allBadge.textContent = allUsers.length; allBadge.style.display = 'inline-block'; }
 
+    const dupPhones = getDuplicatePhones();
+    const dupCount = allUsers.filter(u => dupPhones.has((u.phone || '').trim())).length;
+    const dupBadge = document.getElementById('badge-duplicate_phone');
+    if (dupBadge) { dupBadge.textContent = dupCount > 0 ? dupCount : ''; dupBadge.style.display = dupCount > 0 ? 'inline-block' : 'none'; }
+
     const list = document.getElementById('user-list');
 
     if (filtered.length === 0) {
@@ -541,6 +614,7 @@
         <div>
           <div class="user-item-name">${u.fullname || 'Unknown'}</div>
           <div class="user-item-email">${u.email || ''}</div>
+          ${currentFilter === 'duplicate_phone' && u.phone ? `<div class="user-item-email" style="color:var(--yellow);">\u{1F4F1} ${u.phone}</div>` : ''}
         </div>
         <div class="user-item-meta">
           <div class="status-pill ${u.status || 'pending'}">${formatStatus(u.status)}</div>
@@ -593,7 +667,10 @@
       <div class="detail-header">
         <div>
           <div class="detail-name">${user.fullname || 'Unknown'}</div>
-          <div class="detail-email">${user.email || ''} · ${user.phone || ''}</div>
+          <div class="detail-email">
+            ${user.email ? `<a href="mailto:${user.email}" style="color:inherit;text-decoration:none;">✉️ ${user.email}</a>` : ''}
+            ${user.phone ? ` · <a href="https://wa.me/${user.phone.replace(/[^\d]/g, '')}" target="_blank" style="color:var(--green);text-decoration:none;">💬 ${user.phone}</a>` : ''}
+          </div>
           <div style="margin-top:8px;">
             <span class="status-pill ${user.status || 'pending'}">${formatStatus(user.status)}</span>
             <span style="font-size:11px;color:var(--text-muted);margin-right:10px;">${user.created_by === 'admin' ? '🔧 Created by admin' : '👤 Self registered'}</span>
@@ -607,7 +684,13 @@
         <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${user.fullname || '—'}</div></div>
         <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email || '—'}</div></div>
         <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${user.phone || '—'}</div></div>
-        <div class="info-item"><div class="info-label">Referral Code</div><div class="info-value">${user.referral_code || '—'}</div></div>
+        <div class="info-item">
+          <div class="info-label">Referral Code</div>
+          <div class="info-value">
+            ${user.referral_code || '—'}
+            ${user.referral_code ? `<button class="btn-sm" style="padding:2px 8px;font-size:10px;margin-right:8px;" onclick="copyPlainText('${user.referral_code}')">Copy</button>` : ''}
+          </div>
+        </div>
         <div class="info-item"><div class="info-label">Referred By</div><div class="info-value">${user.referred_by || '—'}</div></div>
         <div class="info-item"><div class="info-label">Registered</div><div class="info-value">${user.created_at ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : '—'}</div></div>
       </div>
@@ -651,8 +734,19 @@
       <div class="section-divider">MT5 Credentials</div>
       <div class="info-grid" style="margin-bottom:28px;">
         <div class="info-item"><div class="info-label">MT5 Login</div><div class="info-value">${user.mt5_login || '—'}</div></div>
-        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password || '—'}</div></div>
+        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password ? user.mt5_password + ' (legacy — will clear on next save)' : 'Sent via email'}</div></div>
         <div class="info-item"><div class="info-label">MT5 Server</div><div class="info-value">${user.mt5_server || 'Harmonic'}</div></div>
+      </div>
+      ` : ''}
+
+      ${user.mt5_history && user.mt5_history.length ? `
+      <div class="section-divider">Previous MT5 Accounts</div>
+      <div style="margin-bottom:28px;">
+        ${user.mt5_history.slice().reverse().map(h => `
+          <div style="font-size:13px;color:var(--text-muted);padding:8px 0;border-bottom:1px solid var(--line);">
+            Login <strong style="color:var(--white);">${h.login}</strong> (${h.server}) — replaced ${new Date(h.replaced_at).toLocaleDateString()}
+          </div>
+        `).join('')}
       </div>
       ` : ''}
 
@@ -680,28 +774,69 @@
     }
   };
 
+  // ── REFERRAL CREDIT
+  // A referral only counts once the referred client is actually approved,
+  // not just on signup — and only ever once per client, guarded by
+  // referral_credited so re-approving someone can't double-count them.
+  async function creditReferralIfNeeded(user) {
+    if (!user.referred_by || user.referral_credited) return;
+    const referrer = allUsers.find(u => u.referral_code === user.referred_by);
+    if (!referrer) return;
+    await updateDoc(doc(db, 'users', referrer.uid), { referral_count: increment(1) });
+    await updateDoc(doc(db, 'users', user.uid), { referral_credited: true });
+    referrer.referral_count = (referrer.referral_count || 0) + 1;
+    user.referral_credited = true;
+  }
+
   // ── APPROVE KYC
   window.approveKYC = async function(uid) {
     if (!confirm('Approve KYC for this client?')) return;
     await updateDoc(doc(db, 'users', uid), { status: 'kyc_approved' });
     const u = allUsers.find(u => u.uid === uid);
-    if (u) u.status = 'kyc_approved';
+    if (u) {
+      u.status = 'kyc_approved';
+      await creditReferralIfNeeded(u);
+    }
     showToast('KYC approved successfully', 'success');
     renderUserList();
     selectUser(uid);
   };
 
   // ── REJECT KYC
+  const REJECT_PRESETS = [
+    'ID photo is unclear or blurry',
+    'Selfie does not match the ID photo',
+    'Document appears expired',
+    'Information provided does not match the document',
+    'Document is not fully visible in the photo'
+  ];
+
   window.showRejectForm = function(uid) {
     document.getElementById('action-form-area').innerHTML = `
       <div class="action-box">
-        <div class="action-box-title">Reject KYC — Enter Reason</div>
-        <textarea class="admin-textarea" id="reject-reason" placeholder="e.g. ID photo not clear, selfie doesn't match ID..."></textarea>
+        <div class="action-box-title">Reject KYC — Select a Reason</div>
+        <select class="admin-input" id="reject-reason-preset" style="margin-bottom:12px;" onchange="applyRejectPreset()">
+          <option value="">— Select a common reason —</option>
+          ${REJECT_PRESETS.map(r => `<option value="${r}">${r}</option>`).join('')}
+          <option value="__other__">Other (write below)</option>
+        </select>
+        <textarea class="admin-textarea" id="reject-reason" placeholder="Reason shown to the client..."></textarea>
         <button class="btn-sm" style="margin-top:12px;background:var(--red-err);border-color:var(--red-err);color:white;" onclick="rejectKYC('${uid}')">
           Confirm Rejection <span class="spinner" id="reject-spinner"></span>
         </button>
       </div>
     `;
+  };
+
+  window.applyRejectPreset = function() {
+    const preset = document.getElementById('reject-reason-preset').value;
+    const textarea = document.getElementById('reject-reason');
+    if (preset === '__other__') {
+      textarea.value = '';
+      textarea.focus();
+    } else if (preset) {
+      textarea.value = preset;
+    }
   };
 
   window.rejectKYC = async function(uid) {
@@ -722,6 +857,9 @@
     document.getElementById('action-form-area').innerHTML = `
       <div class="action-box">
         <div class="action-box-title">Enter MT5 Credentials</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+          The password is emailed directly to the client and is never stored here — you'll need to re-enter it each time, including to resend it. Entering a <em>different</em> login than the one on file replaces their account and keeps the old one on record below, rather than losing it.
+        </p>
         <div class="form-row-admin">
           <div>
             <label class="auth-label">MT5 Login</label>
@@ -729,11 +867,11 @@
           </div>
           <div>
             <label class="auth-label">MT5 Password</label>
-            <input type="text" class="admin-input" id="mt5-pass-input" value="${user?.mt5_password || ''}" placeholder="e.g. Abc@12345">
+            <input type="text" class="admin-input" id="mt5-pass-input" value="" placeholder="e.g. Abc@12345">
           </div>
         </div>
         <button class="btn-sm green" style="margin-top:4px;" onclick="saveMT5('${uid}')">
-          Save & Activate <span class="spinner" id="mt5-spinner"></span>
+          Email to Client & Activate <span class="spinner" id="mt5-spinner"></span>
         </button>
       </div>
     `;
@@ -743,14 +881,51 @@
     const login = document.getElementById('mt5-login-input').value.trim();
     const pass = document.getElementById('mt5-pass-input').value.trim();
     if (!login || !pass) { alert('Please enter both MT5 login and password.'); return; }
+    const user = allUsers.find(u => u.uid === uid);
+    if (!user || !user.email) { alert('This client has no email on file — cannot send credentials.'); return; }
+
     document.getElementById('mt5-spinner').classList.add('show');
-    await updateDoc(doc(db, 'users', uid), {
-      mt5_login: login, mt5_password: pass,
+
+    try {
+      // Email the credentials directly to the client. The password is never
+      // stored in the database — only sent this once, here.
+      await emailjs.send('service_8jq7frq', 'template_jxmt19a', {
+        to_email: user.email,
+        client_name: user.fullname || '',
+        mt5_login: login,
+        mt5_password: pass,
+        mt5_server: 'Harmonic'
+      });
+    } catch (e) {
+      document.getElementById('mt5-spinner').classList.remove('show');
+      showToast('Could not send the credentials email — client was not activated. Try again.', 'error');
+      console.error(e);
+      return;
+    }
+
+    const updates = {
+      mt5_login: login, mt5_password: deleteField(),
       mt5_server: 'Harmonic', status: 'active'
-    });
-    const u = allUsers.find(u => u.uid === uid);
-    if (u) { u.mt5_login = login; u.mt5_password = pass; u.status = 'active'; }
-    showToast('MT5 credentials saved. Client is now active!', 'success');
+    };
+    // Replacing a client's account (rather than setting it for the first time)
+    // keeps a record of the old one instead of silently losing it.
+    const isReplacement = user.mt5_login && user.mt5_login !== login;
+    if (isReplacement) {
+      updates.mt5_history = arrayUnion({
+        login: user.mt5_login,
+        server: user.mt5_server || 'Harmonic',
+        replaced_at: new Date().toISOString()
+      });
+    }
+
+    await updateDoc(doc(db, 'users', uid), updates);
+    if (isReplacement) {
+      user.mt5_history = [...(user.mt5_history || []), { login: user.mt5_login, server: user.mt5_server || 'Harmonic', replaced_at: new Date().toISOString() }];
+    }
+    user.mt5_login = login;
+    delete user.mt5_password;
+    user.status = 'active';
+    showToast(isReplacement ? 'New account emailed to the client. Old account kept on record.' : 'Credentials emailed to the client. Account is now active!', 'success');
     renderUserList();
     selectUser(uid);
   };
@@ -793,15 +968,33 @@
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = cred.user.uid;
       const refCode = uid.substring(0, 8).toUpperCase();
-      const hasMT5 = mt5Login && mt5Pass;
       const hasKYC = dob || city;
+      let hasMT5 = mt5Login && mt5Pass;
+      let mt5EmailFailed = false;
+
+      if (hasMT5) {
+        try {
+          await emailjs.send('service_8jq7frq', 'template_jxmt19a', {
+            to_email: email,
+            client_name: fullname,
+            mt5_login: mt5Login,
+            mt5_password: mt5Pass,
+            mt5_server: 'Harmonic'
+          });
+        } catch (emailErr) {
+          hasMT5 = false;
+          mt5EmailFailed = true;
+          console.error('MT5 credentials email failed:', emailErr);
+        }
+      }
+
+      const finalStatus = hasMT5 ? 'active' : (hasKYC ? 'kyc_approved' : 'pending_kyc');
 
       await setDoc(doc(db, 'users', uid), {
         fullname, phone, email, uid,
-        mt5_login: mt5Login || null,
-        mt5_password: mt5Pass || null,
+        mt5_login: hasMT5 ? mt5Login : null,
         mt5_server: 'Harmonic',
-        status: hasMT5 ? 'active' : (hasKYC ? 'kyc_approved' : 'pending_kyc'),
+        status: finalStatus,
         referral_code: refCode,
         referred_by: referredBy || null,
         created_at: serverTimestamp(),
@@ -813,8 +1006,16 @@
         } : null
       });
 
+      if (referredBy && (finalStatus === 'kyc_approved' || finalStatus === 'active')) {
+        await creditReferralIfNeeded({ uid, referred_by: referredBy, referral_credited: false });
+      }
+
       hideCreateModal();
-      showToast(`Client ${fullname} created successfully!`, 'success');
+      if (mt5EmailFailed) {
+        showToast(`Client ${fullname} created, but the MT5 email failed — enter credentials again from their profile.`, 'error');
+      } else {
+        showToast(`Client ${fullname} created successfully!`, 'success');
+      }
       await loadUsers();
 
     } catch(e) {
@@ -835,6 +1036,11 @@
   };
   window.closeLightbox = function() {
     document.getElementById('lightbox').classList.remove('show');
+  };
+
+  // ── COPY HELPER
+  window.copyPlainText = function(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied: ' + text, 'success'));
   };
 
   // ── TOAST

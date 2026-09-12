@@ -468,16 +468,6 @@
             </div>
           </div>
           <div class="mt5-field">
-            <div class="mt5-field-label lang-ar">كلمة المرور</div>
-            <div class="mt5-field-label lang-en">Password</div>
-            <div class="mt5-field-value">
-              <span id="mt5-password">—</span>
-              <button class="copy-btn" onclick="copyText('mt5-password')">
-                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
-              </button>
-            </div>
-          </div>
-          <div class="mt5-field">
             <div class="mt5-field-label lang-ar">السيرفر</div>
             <div class="mt5-field-label lang-en">Server</div>
             <div class="mt5-field-value">
@@ -493,6 +483,10 @@
             <div class="mt5-field-value">MT5</div>
           </div>
         </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.7;">
+          <span class="lang-ar">تم إرسال كلمة المرور إلى بريدك الإلكتروني عند تفعيل حسابك. تحتاج إعادة إرسالها؟ تواصل مع الدعم.</span>
+          <span class="lang-en">Your password was emailed to you when your account was activated. Need it resent? Contact support.</span>
+        </p>
       </div>
 
       <!-- Referral -->
@@ -591,7 +585,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -621,18 +615,23 @@
 
     const data = userDoc.data();
 
-    // Email verification check disabled temporarily
-    // if (!user.emailVerified) { ... }
-
     // Set name in nav
     const firstName = data.fullname ? data.fullname.split(' ')[0] : '';
     document.getElementById('nav-name').textContent = firstName;
 
-
-
     // Hide loading, show content
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('portal-content').style.display = 'block';
+
+    // Require a verified email before showing any account status/KYC/MT5 data.
+    if (!user.emailVerified) {
+      document.getElementById('card-not-verified').style.display = 'block';
+      window.logout = async function() {
+        await signOut(auth);
+        window.location.href = 'login.html';
+      };
+      return;
+    }
 
     // Show correct status card
     const status = data.status || 'pending_kyc';
@@ -656,16 +655,16 @@
     } else if (status === 'active') {
       document.getElementById('card-active').style.display = 'block';
       document.getElementById('mt5-login').textContent = data.mt5_login || '—';
-      document.getElementById('mt5-password').textContent = data.mt5_password || '—';
       document.getElementById('mt5-server').textContent = data.mt5_server || 'Harmonic';
       // Referral link
       const refCode = data.referral_code || '';
       document.getElementById('referral-link-text').textContent = 'https://valmuntra.com/signup.html?ref=' + refCode;
+      document.getElementById('referral-count').textContent = data.referral_count || 0;
     }
 
     // Request MT5 function
     window.requestMT5 = async function() {
-      await updateDoc(doc(db, 'users', user.uid), { status: 'mt5_requested' });
+      await updateDoc(doc(db, 'users', user.uid), { status: 'mt5_requested', mt5_requested_at: serverTimestamp() });
       document.getElementById('card-kyc-approved').style.display = 'none';
       document.getElementById('card-mt5-requested').style.display = 'block';
     };

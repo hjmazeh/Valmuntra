@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin == true;
+    }
+
+    match /users/{userId} {
+      function isOwner() {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      function unchanged(field) {
+        return !(field in request.resource.data.diff(resource.data).affectedKeys());
+      }
+
+      allow get: if isOwner() || isAdmin();
+      allow list: if isAdmin();
+
+      // Signup: client creates their own doc, but only with safe starting values.
+      allow create: if isOwner()
+        && request.resource.data.uid == userId
+        && (!('is_admin' in request.resource.data) || request.resource.data.is_admin == false)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.mt5_login == null
+        && request.resource.data.mt5_password == null;
+
+      // Self-service updates: only two transitions are allowed, and only
+      // if none of the privileged fields are touched.
+      allow update: if isAdmin() || (
+        isOwner() &&
+        unchanged('is_admin') &&
+        unchanged('mt5_login') &&
+        unchanged('mt5_password') &&
+        unchanged('mt5_server') &&
+        unchanged('mt5_history') &&
+        unchanged('referral_code') &&
+        unchanged('referral_count') &&
+        unchanged('referral_credited') &&
+        unchanged('rejection_reason') &&
+        unchanged('created_by') &&
+        unchanged('email') &&
+        unchanged('uid') &&
+        (
+          // Submitting or resubmitting KYC documents
+          (resource.data.status in ['pending', 'pending_kyc', 'kyc_rejected'] &&
+           request.resource.data.status == 'kyc_submitted') ||
+          // Requesting an MT5 account once KYC is approved
+          (resource.data.status == 'kyc_approved' &&
+           request.resource.data.status == 'mt5_requested')
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}

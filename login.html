@@ -259,6 +259,30 @@
   }
   .success-note.show { display: block; }
 
+  .warning-note {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #FBBF67;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    line-height: 1.7;
+  }
+  .warning-note.show { display: block; }
+  .warning-note button {
+    background: none;
+    border: 1px solid currentColor;
+    color: inherit;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    margin-top: 10px;
+    font-family: inherit;
+  }
+  .warning-note button:hover { background: rgba(245,158,11,0.15); }
+
   footer {
     padding: 20px 60px;
     border-top: 1px solid var(--line);
@@ -308,6 +332,15 @@
       </p>
 
       <div class="global-error" id="global-error"></div>
+      <div class="warning-note" id="unverified-notice">
+        <span class="lang-ar">لم يتم تفعيل بريدك الإلكتروني بعد. يرجى الضغط على رابط التفعيل الذي أرسلناه إلى بريدك عند التسجيل.</span>
+        <span class="lang-en">Your email hasn't been verified yet. Please click the verification link we sent you when you signed up.</span>
+        <br>
+        <button type="button" onclick="resendVerifyFromLogin()">
+          <span class="lang-ar">إعادة إرسال رابط التفعيل</span>
+          <span class="lang-en">Resend verification email</span>
+        </button>
+      </div>
 
       <form id="login-form" novalidate>
         <div class="form-group">
@@ -424,7 +457,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -438,10 +471,29 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // If already logged in, go straight to portal
+  // If already logged in with a verified email, go straight to portal.
+  // An unverified session sitting on this page (e.g. from before verification
+  // was required) gets signed out instead of let through.
   onAuthStateChanged(auth, (user) => {
-    if (user) window.location.href = 'portal.html';
+    if (user && user.emailVerified) {
+      window.location.href = 'portal.html';
+    } else if (user && !user.emailVerified) {
+      signOut(auth);
+    }
   });
+
+  let pendingUnverifiedUser = null;
+
+  window.resendVerifyFromLogin = async function() {
+    const isAr = !document.getElementById('body').classList.contains('en');
+    if (!pendingUnverifiedUser) return;
+    try {
+      await sendEmailVerification(pendingUnverifiedUser);
+      alert(isAr ? 'تم إرسال رابط التفعيل من جديد. تحقق من بريدك.' : 'Verification email resent. Check your inbox.');
+    } catch (e) {
+      alert(isAr ? 'حدث خطأ. حاول لاحقاً.' : 'Something went wrong. Please try again later.');
+    }
+  };
 
   // Login
   document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -453,6 +505,7 @@
     document.querySelectorAll('.form-error').forEach(el => el.classList.remove('show'));
     document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
     document.getElementById('global-error').classList.remove('show');
+    document.getElementById('unverified-notice').classList.remove('show');
 
     let valid = true;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -473,7 +526,17 @@
     spinner.classList.add('show');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      if (!cred.user.emailVerified) {
+        pendingUnverifiedUser = cred.user;
+        await signOut(auth);
+        btn.disabled = false;
+        spinner.classList.remove('show');
+        document.getElementById('unverified-notice').classList.add('show');
+        return;
+      }
+
       window.location.href = 'portal.html';
     } catch(error) {
       btn.disabled = false;
