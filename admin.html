@@ -520,7 +520,7 @@ beta@test.com,42.50,3,2,20"></textarea>
 <script type="module">
   import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, serverTimestamp, query, orderBy, deleteField, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, serverTimestamp, query, orderBy, deleteField, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -539,6 +539,36 @@ beta@test.com,42.50,3,2,20"></textarea>
   let currentFilter = 'all';
   let currentSearch = '';
   let selectedUid = null;
+
+  // Show a notice if we just landed here from an inactivity sign-out.
+  if (sessionStorage.getItem('signed_out_reason') === 'inactivity') {
+    sessionStorage.removeItem('signed_out_reason');
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = 'You were signed out after 20 minutes of inactivity.';
+    errEl.classList.add('show');
+  }
+
+  // ── INACTIVITY TIMEOUT
+  // Admin holds sensitive data (KYC documents, MT5 credential entry, rebate
+  // payouts) — an unattended signed-in device is the highest-value target
+  // in this whole system, so it gets signed out automatically, unlike the
+  // client portal.
+  const INACTIVITY_LIMIT_MS = 20 * 60 * 1000;
+  let inactivityTimer = null;
+
+  function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(async () => {
+      sessionStorage.setItem('signed_out_reason', 'inactivity');
+      if (usersUnsubscribe) usersUnsubscribe();
+      await signOut(auth);
+      location.reload();
+    }, INACTIVITY_LIMIT_MS);
+  }
+
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer, { passive: true });
+  });
 
   // ── AUTH
   window.adminLogin = async function() {
@@ -567,7 +597,11 @@ beta@test.com,42.50,3,2,20"></textarea>
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('admin-layout').classList.add('show');
       document.getElementById('admin-email-display').textContent = email;
-      loadUsers();
+      resetInactivityTimer();
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      startUsersListener();
     } catch(e) {
       errEl.textContent = 'Incorrect email or password.';
       errEl.classList.add('show');
@@ -577,17 +611,70 @@ beta@test.com,42.50,3,2,20"></textarea>
   };
 
   window.adminLogout = async function() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    if (usersUnsubscribe) usersUnsubscribe();
     await signOut(auth);
     location.reload();
   };
 
-  // ── LOAD USERS
-  async function loadUsers() {
-    const snap = await getDocs(collection(db, 'users'));
-    allUsers = [];
-    snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
-    allUsers.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
-    renderUserList();
+  // ── LIVE USER LIST
+  // A real-time listener instead of a one-time fetch, so a new KYC
+  // submission or MT5 request shows up without the admin refreshing —
+  // and so we can alert on it as it happens.
+  let usersUnsubscribe = null;
+  let previousStatusByUid = {};
+  let isFirstSnapshot = true;
+
+  function playNotifySound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1046].forEach((freq, i) => {
+        setTimeout(() => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = freq;
+          g.gain.setValueAtTime(0.2, ctx.currentTime);
+          o.start(); o.stop(ctx.currentTime + 0.15);
+        }, i * 180);
+      });
+    } catch (e) { /* audio not available — the toast/browser notification still fire */ }
+  }
+
+  function notifyNewAction(user, label) {
+    playNotifySound();
+    showToast(`${label}: ${user.fullname || user.email || 'a client'}`, 'success');
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Valmuntra Admin', { body: `${label}: ${user.fullname || user.email || 'a client'}` });
+    }
+  }
+
+  function startUsersListener() {
+    const q = query(collection(db, 'users'), orderBy('created_at', 'desc'));
+    usersUnsubscribe = onSnapshot(q, (snap) => {
+      const newUsers = [];
+      snap.forEach(d => newUsers.push({ uid: d.id, ...d.data() }));
+
+      if (!isFirstSnapshot) {
+        newUsers.forEach(u => {
+          const prevStatus = previousStatusByUid[u.uid];
+          if (u.status === 'kyc_submitted' && prevStatus !== 'kyc_submitted') {
+            notifyNewAction(u, 'KYC submitted');
+          } else if (u.status === 'mt5_requested' && prevStatus !== 'mt5_requested') {
+            notifyNewAction(u, 'MT5 account requested');
+          }
+        });
+      }
+
+      previousStatusByUid = {};
+      newUsers.forEach(u => { previousStatusByUid[u.uid] = u.status; });
+
+      allUsers = newUsers;
+      renderUserList();
+      isFirstSnapshot = false;
+    }, (err) => {
+      console.error('Client list listener failed:', err);
+      showToast('Lost connection to the client list — reload the page.', 'error');
+    });
   }
 
   function updateStatsBar() {
@@ -1013,7 +1100,11 @@ beta@test.com,42.50,3,2,20"></textarea>
     const accounts = getMt5Accounts(user);
     const isReplace = slotIndex !== undefined && slotIndex !== null;
     if (!isReplace && accounts.length >= 3) { alert('This client already has 3 MT5 accounts, the maximum allowed.'); return; }
-    const wasAlreadyActive = user.status === 'active';
+    // Checked by account count, not the literal status string — a client
+    // requesting a 2nd/3rd account transitions back through 'mt5_requested'
+    // before this runs, so checking for status === 'active' would wrongly
+    // look like a first activation and double-credit the referrer.
+    const wasAlreadyActive = accounts.length > 0;
 
     document.getElementById('mt5-spinner').classList.add('show');
 
@@ -1487,7 +1578,9 @@ The Valmuntra Team`;
         } : null
       });
 
-      if (referredBy && (finalStatus === 'kyc_approved' || finalStatus === 'active')) {
+      // Only credit on an actual MT5 account, matching the rule everywhere
+      // else — kyc_approved alone (no MT5 yet) must not count as a referral.
+      if (referredBy && finalStatus === 'active') {
         await creditReferralIfNeeded({ uid, referred_by: referredBy, referral_credited: false });
       }
 
@@ -1497,7 +1590,6 @@ The Valmuntra Team`;
       } else {
         showToast(`Client ${fullname} created successfully!`, 'success');
       }
-      await loadUsers();
 
     } catch(e) {
       errEl.textContent = e.code === 'auth/email-already-in-use'

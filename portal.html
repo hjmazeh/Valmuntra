@@ -309,8 +309,19 @@
     border: 1px solid var(--line);
     padding: 32px;
     margin-bottom: 20px;
-    opacity: 0.4;
     position: relative;
+  }
+  .funding-method-btn {
+    flex: 1; min-width: 140px;
+    background: var(--bg3); border: 1px solid var(--line); color: var(--white);
+    padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: 'Barlow', sans-serif;
+  }
+  .funding-method-btn:hover { border-color: var(--red); background: var(--bg2); }
+  .funding-select {
+    width: 100%; background: var(--bg3); border: 1px solid var(--line); color: var(--white);
+    padding: 12px 14px; font-size: 14px; font-family: 'Barlow', sans-serif;
   }
   .funding-soon {
     position: absolute;
@@ -367,6 +378,24 @@
     .status-card, .mt5-card, .referral-card, .funding-card { padding: 24px 20px; }
     .mt5-fields { grid-template-columns: 1fr; }
     .referral-stats { flex-direction: column; gap: 16px; }
+  }
+
+  /* ── WHATSAPP CONTACT (present on every page so a client can reach
+     support directly no matter where they get stuck) */
+  .whatsapp-float {
+    position: fixed; bottom: 20px; right: 20px; z-index: 200;
+    display: flex; align-items: center; gap: 8px;
+    background: #25D366; color: #fff; text-decoration: none;
+    padding: 10px 16px; border-radius: 30px;
+    font-size: 13px; font-weight: 700; font-family: 'Barlow', sans-serif;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    transition: transform 0.15s;
+  }
+  .whatsapp-float:hover { transform: scale(1.05); }
+  .whatsapp-float svg { width: 20px; height: 20px; flex-shrink: 0; }
+  @media (max-width: 600px) {
+    .whatsapp-float { padding: 8px 12px; font-size: 12px; bottom: 14px; right: 14px; }
+    .whatsapp-float svg { width: 18px; height: 18px; }
   }
 </style>
 </head>
@@ -472,6 +501,12 @@
         </p>
       </div>
 
+      <div id="request-another-box" class="mt5-card" style="display:none;text-align:center;">
+        <button class="btn-primary" onclick="requestMT5()">
+          <span class="lang-ar">طلب حساب MT5 إضافي</span><span class="lang-en">Request Another MT5 Account</span>
+        </button>
+      </div>
+
       <!-- Referral -->
       <div class="referral-card">
         <div class="referral-card-title lang-ar">رابط الإحالة</div>
@@ -494,14 +529,23 @@
       </div>
     </div>
 
-    <!-- Funding (coming soon) -->
+    <!-- Funding -->
     <div class="funding-card">
-      <div class="funding-soon lang-ar">قريباً</div>
-      <div class="funding-soon lang-en">Coming Soon</div>
+      <div class="funding-soon lang-ar">الأتمتة قريباً</div>
+      <div class="funding-soon lang-en">Automation Coming Soon</div>
       <div class="funding-card-title lang-ar">تمويل الحساب</div>
       <div class="funding-card-title lang-en">Fund Your Account</div>
-      <p class="funding-card-sub lang-ar">ShamCash · USDT</p>
-      <p class="funding-card-sub lang-en">ShamCash · USDT</p>
+      <p class="funding-card-sub lang-ar">اختر طريقة التمويل، وسنكمل الطلب معك مباشرة عبر واتساب.</p>
+      <p class="funding-card-sub lang-en">Pick a funding method and we'll finish the request with you directly on WhatsApp.</p>
+      <div id="funding-account-picker" style="display:none;margin-top:16px;">
+        <div class="mt5-field-label lang-ar" style="margin-bottom:6px;">أي حساب تريد تمويله؟</div>
+        <div class="mt5-field-label lang-en" style="margin-bottom:6px;">Which account do you want to fund?</div>
+        <select id="funding-account-select" class="funding-select"></select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <button class="funding-method-btn" onclick="requestFunding('ShamCash')">ShamCash</button>
+        <button class="funding-method-btn" onclick="requestFunding('USDT')">USDT</button>
+      </div>
     </div>
 
   </div>
@@ -694,12 +738,26 @@
       const refCode = data.referral_code || '';
       document.getElementById('referral-link-text').textContent = 'https://valmuntra.com/signup.html?ref=' + refCode;
       document.getElementById('referral-count').textContent = data.referral_count || 0;
+      // Up to 3 accounts total — hide the request button once at the cap
+      document.getElementById('request-another-box').style.display = mt5Accounts.length < 3 ? 'block' : 'none';
+      // With more than one account, let them pick which one to fund instead
+      // of guessing — with only one, there's nothing to choose.
+      const fundingPicker = document.getElementById('funding-account-picker');
+      const fundingSelect = document.getElementById('funding-account-select');
+      if (mt5Accounts.length > 1) {
+        fundingSelect.innerHTML = mt5Accounts.map(acc => `<option value="${escapeHtml(acc.login)}">${escapeHtml(acc.login)}</option>`).join('');
+        fundingPicker.style.display = 'block';
+      } else {
+        fundingPicker.style.display = 'none';
+      }
     }
 
-    // Request MT5 function
+    // Request MT5 function — also used from the active view to request a
+    // 2nd/3rd account, not just the first one from kyc_approved.
     window.requestMT5 = async function() {
       await updateDoc(doc(db, 'users', user.uid), { status: 'mt5_requested', mt5_requested_at: serverTimestamp() });
       document.getElementById('card-kyc-approved').style.display = 'none';
+      document.getElementById('card-active').style.display = 'none';
       document.getElementById('card-mt5-requested').style.display = 'block';
 
       // Notify the team, same as the KYC-submission notification. Best-effort:
@@ -709,11 +767,27 @@
           to_email: 'support@valmuntra.com',
           reply_to: user.email,
           subject: 'MT5 Account Requested — ' + (data.fullname || ''),
-          message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nClient is KYC-approved and has requested an MT5 account. Login to review: https://valmuntra.com/admin.html`
+          message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\n${status === 'active' ? 'Client is already active and has requested an additional MT5 account.' : 'Client is KYC-approved and has requested an MT5 account.'} Login to review: https://valmuntra.com/admin.html`
         });
       } catch (emailErr) {
         console.log('MT5 request notification failed:', emailErr);
       }
+    };
+
+    // Funding request — no automated deposits yet, so this just hands the
+    // client straight to WhatsApp with everything support needs pre-filled.
+    window.requestFunding = function(method) {
+      const accounts = (data.mt5_accounts && data.mt5_accounts.length)
+        ? data.mt5_accounts
+        : (data.mt5_login ? [{ login: data.mt5_login }] : []);
+      // With multiple accounts, use whichever one they picked in the
+      // dropdown rather than dumping every login into the message.
+      const fundingSelect = document.getElementById('funding-account-select');
+      const selectedLogin = accounts.length > 1 && fundingSelect && fundingSelect.value
+        ? fundingSelect.value
+        : (accounts[0] ? accounts[0].login : '—');
+      const message = `Hi, I'd like to fund my MT5 account.\nName: ${data.fullname || ''}\nMT5 Login: ${selectedLogin}\nReferral Code: ${data.referral_code || ''}\nFunding Method: ${method}`;
+      window.open(`https://wa.me/35794591707?text=${encodeURIComponent(message)}`, '_blank');
     };
 
     // Logout
@@ -723,6 +797,11 @@
     };
   });
 </script>
+
+<a href="https://wa.me/35794591707" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Contact us on WhatsApp">
+  <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M16.001 3C9.101 3 3.5 8.6 3.5 15.5c0 2.3.63 4.46 1.72 6.32L3 29l7.36-2.17a12.42 12.42 0 0 0 5.64 1.37h.005c6.9 0 12.5-5.6 12.5-12.5S22.9 3 16.001 3zm7.34 17.86c-.31.87-1.53 1.6-2.5 1.8-.66.14-1.53.25-4.44-.95-3.73-1.54-6.13-5.33-6.32-5.58-.19-.25-1.5-2-1.5-3.8 0-1.8.94-2.68 1.28-3.05.31-.34.68-.42.9-.42.23 0 .45.002.65.012.21.01.49-.08.76.58.31.75 1.05 2.55 1.14 2.73.09.19.15.4.03.65-.12.25-.19.4-.37.62-.19.22-.4.5-.57.67-.19.19-.39.4-.17.78.22.38.98 1.62 2.11 2.63 1.45 1.29 2.67 1.7 3.05 1.89.38.19.6.16.82-.1.22-.25.94-1.1 1.19-1.48.25-.38.5-.31.84-.19.34.12 2.15 1.02 2.52 1.2.37.19.62.28.71.44.09.15.09.85-.22 1.72z"/></svg>
+  <span>+357 94 591 707</span>
+</a>
 
 </body>
 </html>

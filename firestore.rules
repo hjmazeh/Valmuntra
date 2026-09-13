@@ -57,6 +57,9 @@ service cloud.firestore {
            request.resource.data.status == 'kyc_submitted') ||
           // Requesting an MT5 account once KYC is approved
           (resource.data.status == 'kyc_approved' &&
+           request.resource.data.status == 'mt5_requested') ||
+          // Requesting an additional (2nd/3rd) MT5 account once active
+          (resource.data.status == 'active' &&
            request.resource.data.status == 'mt5_requested')
         )
       );
