@@ -264,12 +264,19 @@
   .tree-node { position: relative; }
   .tree-node-row {
     display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px; border-radius: 2px;
-    cursor: pointer; transition: background 0.15s;
+    padding: 8px 10px; border-radius: 4px;
+    transition: background 0.15s;
   }
   .tree-node-row:hover { background: var(--bg3); }
-  .tree-node-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .tree-node-row.tree-match { background: rgba(234,179,8,0.15); }
+  .tree-toggle {
+    width: 14px; flex-shrink: 0; text-align: center;
+    color: var(--text-muted); font-size: 11px; cursor: pointer; user-select: none;
+  }
+  .tree-node-name { font-size: 13px; font-weight: 600; color: var(--white); cursor: pointer; }
+  .tree-node-name:hover { text-decoration: underline; }
   .tree-node-code { font-size: 11px; color: var(--text-muted); font-family: 'Barlow', sans-serif; }
+  .tree-node-count { font-size: 11px; color: var(--text-muted); margin-inline-start: auto; flex-shrink: 0; }
   .tree-children { margin-inline-start: 22px; border-inline-start: 1px solid var(--line); padding-inline-start: 14px; }
   .tree-empty { color: var(--text-muted); font-size: 13px; padding: 20px; text-align: center; }
 
@@ -471,9 +478,15 @@
       Referral Tree
       <button class="modal-close" onclick="hideReferralTree()">×</button>
     </div>
-    <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line);">
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line);">
       Structure only — dollar amounts aren't calculated here yet (that needs live MT5 trading data, not connected to this system). Rule for reference: a client's <strong style="color:var(--text);">direct referrer</strong> earns full rate on their trades; that referrer's <strong style="color:var(--text);">own referrer</strong> earns a reduced rate; anyone further up earns nothing from that client.
     </p>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <input type="text" class="search-box" id="tree-search" placeholder="Search by name, email, or referral code..." oninput="searchTree(this.value)" style="flex:1;">
+      <button class="btn-sm" onclick="expandAllTree()">Expand All</button>
+      <button class="btn-sm" onclick="collapseAllTree()">Collapse All</button>
+    </div>
+    <div id="tree-match-count" style="font-size:11px;color:var(--text-muted);min-height:16px;margin-bottom:6px;"></div>
     <div id="tree-content" style="max-height:60vh;overflow-y:auto;"></div>
   </div>
 </div>
@@ -695,6 +708,11 @@ beta@test.com,42.50,3,2,20"></textarea>
     return [];
   }
 
+  function rebateLifetimeTotal(user) {
+    if (!user.rebate_history || !user.rebate_history.length) return 0;
+    return user.rebate_history.reduce((sum, h) => sum + (parseFloat(h.amount) || 0), 0);
+  }
+
   function formatStatus(s) {
     const map = {
       pending: 'Pending', pending_kyc: 'KYC Req',
@@ -825,6 +843,22 @@ beta@test.com,42.50,3,2,20"></textarea>
         ${user.mt5_history.slice().reverse().map(h => `
           <div style="font-size:13px;color:var(--text-muted);padding:8px 0;border-bottom:1px solid var(--line);">
             Login <strong style="color:var(--white);">${escapeHtml(h.login)}</strong> (${escapeHtml(h.server)}) — replaced ${new Date(h.replaced_at).toLocaleDateString()}
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
+
+      ${user.rebate_history && user.rebate_history.length ? `
+      <div class="section-divider">Rebate History</div>
+      <div style="margin-bottom:28px;">
+        <div class="info-grid" style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line);">
+          <div class="info-item"><div class="info-label">Lifetime Total</div><div class="info-value" style="font-weight:700;">$${escapeHtml(rebateLifetimeTotal(user).toFixed(2))}</div></div>
+          <div class="info-item"><div class="info-label">Payouts Sent</div><div class="info-value">${user.rebate_history.length}</div></div>
+        </div>
+        ${user.rebate_history.slice().reverse().map(h => `
+          <div style="font-size:13px;color:var(--text-muted);padding:8px 0;border-bottom:1px solid var(--line);">
+            <strong style="color:var(--white);">$${escapeHtml(String(h.amount))}</strong> — notified ${new Date(h.notified_at).toLocaleDateString()}
+            ${h.active_referrals || h.trading_referrals || h.total_lots ? `<br>${escapeHtml(String(h.active_referrals || 0))} active referrals, ${escapeHtml(String(h.trading_referrals || 0))} traded, ${escapeHtml(String(h.total_lots || 0))} lots` : ''}
           </div>
         `).join('')}
       </div>
@@ -1047,42 +1081,116 @@ beta@test.com,42.50,3,2,20"></textarea>
   // ── REFERRAL TREE
   // Structure only — no payout math here. That needs live MT5 trading data,
   // which this system doesn't have yet.
-  function renderTreeNode(user, childrenMap) {
-    const kids = childrenMap[user.referral_code] || [];
+  let treeByCode = {};
+  let treeChildrenMap = {};
+  let treeRoots = [];
+  let treeExpanded = new Set();   // referral_codes currently expanded
+  let treeSearchMatches = new Set(); // uids matching the current search
+
+  function treeDownlineCount(code, seen) {
+    seen = seen || new Set();
+    if (seen.has(code)) return 0; // guard against a corrupted circular chain
+    seen.add(code);
+    const kids = treeChildrenMap[code] || [];
+    return kids.reduce((sum, k) => sum + 1 + treeDownlineCount(k.referral_code, seen), 0);
+  }
+
+  function renderTreeNode(user) {
+    const kids = treeChildrenMap[user.referral_code] || [];
+    const hasKids = kids.length > 0;
+    const isExpanded = treeExpanded.has(user.referral_code);
+    const isMatch = treeSearchMatches.has(user.uid);
+    const totalDownline = hasKids ? treeDownlineCount(user.referral_code) : 0;
+
     return `
       <div class="tree-node">
-        <div class="tree-node-row" onclick="jumpToClientFromTree('${user.uid}')">
+        <div class="tree-node-row${isMatch ? ' tree-match' : ''}">
+          <span class="tree-toggle" ${hasKids ? `onclick="toggleTreeNode('${user.referral_code}')"` : ''}>${hasKids ? (isExpanded ? '▾' : '▸') : ''}</span>
           <span class="status-pill ${user.status || 'pending'}">${formatStatus(user.status)}</span>
-          <span class="tree-node-name">${escapeHtml(user.fullname) || 'Unknown'}</span>
+          <span class="tree-node-name" onclick="jumpToClientFromTree('${user.uid}')">${escapeHtml(user.fullname) || 'Unknown'}</span>
           <span class="tree-node-code">${escapeHtml(user.referral_code)}</span>
+          ${hasKids ? `<span class="tree-node-count">${kids.length} direct${totalDownline > kids.length ? ` · ${totalDownline} total` : ''}</span>` : ''}
         </div>
-        ${kids.length ? `<div class="tree-children">${kids.map(k => renderTreeNode(k, childrenMap)).join('')}</div>` : ''}
+        ${hasKids && isExpanded ? `<div class="tree-children">${kids.map(k => renderTreeNode(k)).join('')}</div>` : ''}
       </div>
     `;
   }
 
-  window.showReferralTree = function() {
-    const byCode = {};
-    allUsers.forEach(u => { if (u.referral_code) byCode[u.referral_code] = u; });
+  function renderTreeContent() {
+    const content = document.getElementById('tree-content');
+    content.innerHTML = treeRoots.length
+      ? treeRoots.map(r => renderTreeNode(r)).join('')
+      : '<div class="tree-empty">No referrals yet.</div>';
+    const countEl = document.getElementById('tree-match-count');
+    if (countEl) {
+      countEl.textContent = treeSearchMatches.size
+        ? `${treeSearchMatches.size} match${treeSearchMatches.size === 1 ? '' : 'es'} found`
+        : '';
+    }
+  }
 
-    const childrenMap = {};
+  window.toggleTreeNode = function(code) {
+    if (treeExpanded.has(code)) treeExpanded.delete(code); else treeExpanded.add(code);
+    renderTreeContent();
+  };
+
+  window.expandAllTree = function() {
+    Object.keys(treeChildrenMap).forEach(code => treeExpanded.add(code));
+    renderTreeContent();
+  };
+
+  window.collapseAllTree = function() {
+    treeExpanded.clear();
+    renderTreeContent();
+  };
+
+  window.searchTree = function(query) {
+    query = query.trim().toLowerCase();
+    if (!query) {
+      treeSearchMatches.clear();
+      renderTreeContent();
+      return;
+    }
+    treeSearchMatches = new Set(
+      allUsers.filter(u =>
+        (u.fullname || '').toLowerCase().includes(query) ||
+        (u.email || '').toLowerCase().includes(query) ||
+        (u.referral_code || '').toLowerCase().includes(query)
+      ).map(u => u.uid)
+    );
+    // Auto-expand every ancestor of each match, or it'd be found but hidden.
+    treeSearchMatches.forEach(uid => {
+      let u = allUsers.find(x => x.uid === uid);
+      while (u && u.referred_by && treeByCode[u.referred_by]) {
+        treeExpanded.add(u.referred_by);
+        u = treeByCode[u.referred_by];
+      }
+    });
+    renderTreeContent();
+  };
+
+  window.showReferralTree = function() {
+    treeByCode = {};
+    allUsers.forEach(u => { if (u.referral_code) treeByCode[u.referral_code] = u; });
+
+    treeChildrenMap = {};
     allUsers.forEach(u => {
-      if (u.referred_by && byCode[u.referred_by]) {
-        (childrenMap[u.referred_by] = childrenMap[u.referred_by] || []).push(u);
+      if (u.referred_by && treeByCode[u.referred_by]) {
+        (treeChildrenMap[u.referred_by] = treeChildrenMap[u.referred_by] || []).push(u);
       }
     });
 
     // Roots: anyone with no referrer, or whose referrer code doesn't match a real client
-    const roots = allUsers.filter(u => !u.referred_by || !byCode[u.referred_by]);
+    const roots = allUsers.filter(u => !u.referred_by || !treeByCode[u.referred_by]);
     // Only show roots that actually have someone under them — an isolated
     // client with no referrals adds noise, not signal, to this view.
-    const rootsWithReferrals = roots.filter(u => u.referral_code && childrenMap[u.referral_code]);
+    treeRoots = roots.filter(u => u.referral_code && treeChildrenMap[u.referral_code]);
 
-    const content = document.getElementById('tree-content');
-    content.innerHTML = rootsWithReferrals.length
-      ? rootsWithReferrals.map(r => renderTreeNode(r, childrenMap)).join('')
-      : '<div class="tree-empty">No referrals yet.</div>';
+    treeExpanded = new Set();
+    treeSearchMatches = new Set();
+    document.getElementById('tree-search').value = '';
 
+    renderTreeContent();
     document.getElementById('tree-modal').classList.add('show');
   };
 
