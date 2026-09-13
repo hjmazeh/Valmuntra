@@ -1419,33 +1419,26 @@ beta@test.com,42.50,3,2,20"></textarea>
   // template's body is just a {{message}} passthrough.
   function buildRebateMessage(r) {
     const name = r.user.fullname || '';
-    return `مرحباً ${name}،
-
-تم احتساب عمولة الإحالة الخاصة بك بمبلغ ${r.amount}$ وستُودع في حسابك خلال الساعات القليلة القادمة (حتى ٣ ساعات تقريباً).
-
-تفاصيل الإحالات:
-- عدد الإحالات النشطة: ${r.activeReferrals || '—'}
-- عدد من قام بالتداول: ${r.tradingReferrals || '—'}
-- إجمالي اللوتات المتداولة: ${r.totalLots || '—'}
-
-إذا كان لديك أي استفسار حول هذا المبلغ، تواصل معنا عبر واتساب وسنكون سعداء بمساعدتك.
-
-فريق Valmuntra
-
------------------------------------
-
-Hello ${name},
+    return `Hello ${name},
+مرحباً ${name}،
 
 Your referral rebate has been calculated at $${r.amount} and will be deposited into your account shortly (within approximately 3 hours).
+تم احتساب عمولة الإحالة الخاصة بك بمبلغ ${r.amount}$ وستُودع في حسابك خلال الساعات القليلة القادمة (حتى ٣ ساعات تقريباً).
 
 Referral details:
+تفاصيل الإحالات:
 - Active referrals: ${r.activeReferrals || '—'}
+- عدد الإحالات النشطة: ${r.activeReferrals || '—'}
 - Referrals who have traded: ${r.tradingReferrals || '—'}
+- عدد من قام بالتداول: ${r.tradingReferrals || '—'}
 - Total lots traded: ${r.totalLots || '—'}
+- إجمالي اللوتات المتداولة: ${r.totalLots || '—'}
 
 If you have any questions about this amount, reach out to us on WhatsApp and we'll be happy to help.
+إذا كان لديك أي استفسار حول هذا المبلغ، تواصل معنا عبر واتساب وسنكون سعداء بمساعدتك.
 
-The Valmuntra Team`;
+The Valmuntra Team
+فريق Valmuntra`;
   }
 
   window.sendAllRebates = async function() {
