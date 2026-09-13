@@ -1119,11 +1119,20 @@ beta@test.com,42.50,3,2,20"></textarea>
   window.exportReferralData = function() {
     const rows = [['mt5_login', 'client_name', 'client_email', 'referral_code', 'referred_by', 'status']];
     allUsers.forEach(u => {
-      getMt5Accounts(u).forEach(acc => {
-        rows.push([acc.login || '', u.fullname || '', u.email || '', u.referral_code || '', u.referred_by || '', u.status || '']);
-      });
+      const accounts = getMt5Accounts(u);
+      if (accounts.length) {
+        accounts.forEach(acc => {
+          rows.push([acc.login || '', u.fullname || '', u.email || '', u.referral_code || '', u.referred_by || '', u.status || '']);
+        });
+      } else {
+        // Still export a row (blank login) even with no MT5 account of
+        // their own yet — otherwise a referrer who hasn't been activated
+        // is invisible to the sheet, silently breaking the chain for
+        // anyone below them who does have an account.
+        rows.push(['', u.fullname || '', u.email || '', u.referral_code || '', u.referred_by || '', u.status || '']);
+      }
     });
-    if (rows.length === 1) { showToast('No clients with MT5 accounts yet — nothing to export.', 'error'); return; }
+    if (rows.length === 1) { showToast('No clients yet — nothing to export.', 'error'); return; }
     downloadFile(rows.map(r => r.map(csvEscape).join(',')).join('\n'), `valmuntra-referral-export-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
   };
 
