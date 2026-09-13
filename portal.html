@@ -460,39 +460,11 @@
 
     <!-- STATUS: active — MT5 details -->
     <div id="card-active" style="display:none;">
+      <div id="mt5-cards-container"></div>
       <div class="mt5-card">
-        <div class="mt5-card-title lang-ar">بيانات حساب MT5</div>
-        <div class="mt5-card-title lang-en">MT5 Account Details</div>
-        <div class="mt5-fields">
-          <div class="mt5-field">
-            <div class="mt5-field-label lang-ar">رقم الحساب</div>
-            <div class="mt5-field-label lang-en">Login</div>
-            <div class="mt5-field-value">
-              <span id="mt5-login">—</span>
-              <button class="copy-btn" onclick="copyText('mt5-login')">
-                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
-              </button>
-            </div>
-          </div>
-          <div class="mt5-field">
-            <div class="mt5-field-label lang-ar">السيرفر</div>
-            <div class="mt5-field-label lang-en">Server</div>
-            <div class="mt5-field-value">
-              <span id="mt5-server">Harmonic</span>
-              <button class="copy-btn" onclick="copyText('mt5-server')">
-                <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
-              </button>
-            </div>
-          </div>
-          <div class="mt5-field">
-            <div class="mt5-field-label lang-ar">المنصة</div>
-            <div class="mt5-field-label lang-en">Platform</div>
-            <div class="mt5-field-value">MT5</div>
-          </div>
-        </div>
-        <p style="font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.7;">
-          <span class="lang-ar">تم إرسال كلمة المرور إلى بريدك الإلكتروني عند تفعيل حسابك. تحتاج إعادة إرسالها؟</span>
-          <span class="lang-en">Your password was emailed to you when your account was activated. Need it resent?</span>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          <span class="lang-ar">تم إرسال كلمة المرور إلى بريدك الإلكتروني عند تفعيل كل حساب. تحتاج إعادة إرسالها؟</span>
+          <span class="lang-en">Your password was emailed to you when each account was activated. Need it resent?</span>
           <a href="#" id="whatsapp-resend-link" target="_blank" rel="noopener" style="color:var(--green);text-decoration:none;font-weight:700;">
             <span class="lang-ar">تواصل معنا عبر واتساب</span>
             <span class="lang-en">Contact us on WhatsApp</span>
@@ -555,6 +527,16 @@
       btnEn.classList.remove('active');
 
     }
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function copyText(id) {
@@ -667,8 +649,42 @@
       document.getElementById('card-mt5-requested').style.display = 'block';
     } else if (status === 'active') {
       document.getElementById('card-active').style.display = 'block';
-      document.getElementById('mt5-login').textContent = data.mt5_login || '—';
-      document.getElementById('mt5-server').textContent = data.mt5_server || 'Harmonic';
+      const mt5Accounts = (data.mt5_accounts && data.mt5_accounts.length)
+        ? data.mt5_accounts
+        : (data.mt5_login ? [{ login: data.mt5_login, server: data.mt5_server || 'Harmonic' }] : []);
+      document.getElementById('mt5-cards-container').innerHTML = mt5Accounts.map((acc, i) => `
+        <div class="mt5-card">
+          <div class="mt5-card-title lang-ar">بيانات حساب MT5${mt5Accounts.length > 1 ? ' #' + (i + 1) : ''}</div>
+          <div class="mt5-card-title lang-en">MT5 Account Details${mt5Accounts.length > 1 ? ' #' + (i + 1) : ''}</div>
+          <div class="mt5-fields">
+            <div class="mt5-field">
+              <div class="mt5-field-label lang-ar">رقم الحساب</div>
+              <div class="mt5-field-label lang-en">Login</div>
+              <div class="mt5-field-value">
+                <span id="mt5-login-${i}">${escapeHtml(acc.login) || '—'}</span>
+                <button class="copy-btn" onclick="copyText('mt5-login-${i}')">
+                  <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
+                </button>
+              </div>
+            </div>
+            <div class="mt5-field">
+              <div class="mt5-field-label lang-ar">السيرفر</div>
+              <div class="mt5-field-label lang-en">Server</div>
+              <div class="mt5-field-value">
+                <span id="mt5-server-${i}">${escapeHtml(acc.server) || 'Harmonic'}</span>
+                <button class="copy-btn" onclick="copyText('mt5-server-${i}')">
+                  <span class="lang-ar">نسخ</span><span class="lang-en">Copy</span>
+                </button>
+              </div>
+            </div>
+            <div class="mt5-field">
+              <div class="mt5-field-label lang-ar">المنصة</div>
+              <div class="mt5-field-label lang-en">Platform</div>
+              <div class="mt5-field-value">MT5</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
       // WhatsApp password-resend request, pre-filled so support can identify the client immediately
       const waMessage = encodeURIComponent(
         `Hi, I'd like to request my MT5 password be resent.\nName: ${data.fullname || ''}\nEmail: ${data.email || user.email}\nReferral code: ${data.referral_code || ''}`
@@ -690,12 +706,10 @@
       // a failed email shouldn't block the client's request from going through.
       try {
         await emailjs.send('service_0oshg5a', 'template_k00znup', {
+          to_email: 'support@valmuntra.com',
+          reply_to: user.email,
           subject: 'MT5 Account Requested — ' + (data.fullname || ''),
-          client_name: data.fullname || '',
-          client_email: user.email,
-          client_phone: data.phone || '',
-          submitted_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' }),
-          message: 'Client is KYC-approved and has requested an MT5 account. Login to review: https://valmuntra.com/admin.html'
+          message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nClient is KYC-approved and has requested an MT5 account. Login to review: https://valmuntra.com/admin.html`
         });
       } catch (emailErr) {
         console.log('MT5 request notification failed:', emailErr);

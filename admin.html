@@ -332,6 +332,8 @@
     <div class="admin-nav-right">
       <span class="admin-user-email" id="admin-email-display"></span>
       <button class="btn-sm" onclick="showReferralTree()">🌳 Referral Tree</button>
+      <button class="btn-sm" onclick="exportReferralData()">⬇ Export Referral Data</button>
+      <button class="btn-sm" onclick="showRebatesModal()">💰 Rebates</button>
       <button class="btn-sm red" onclick="showCreateModal()">+ Create Client</button>
       <button class="btn-sm" onclick="adminLogout()">Logout</button>
     </div>
@@ -473,6 +475,24 @@
       Structure only — dollar amounts aren't calculated here yet (that needs live MT5 trading data, not connected to this system). Rule for reference: a client's <strong style="color:var(--text);">direct referrer</strong> earns full rate on their trades; that referrer's <strong style="color:var(--text);">own referrer</strong> earns a reduced rate; anyone further up earns nothing from that client.
     </p>
     <div id="tree-content" style="max-height:60vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- Rebates -->
+<div class="modal-overlay" id="rebates-modal">
+  <div class="modal-box" style="max-width:820px;">
+    <div class="modal-title">
+      Rebate Notifications
+      <button class="modal-close" onclick="hideRebatesModal()">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line);">
+      Paste the rebate results from the Google Sheet below, or upload the downloaded file. Needs a <strong style="color:var(--text);">client_email</strong> column and a <strong style="color:var(--text);">rebate_amount</strong> column — <strong style="color:var(--text);">active_referrals</strong>, <strong style="color:var(--text);">trading_referrals</strong> and <strong style="color:var(--text);">total_lots</strong> are optional but get included in the email so the client has the breakdown if they ask. This only sends the "your rebate will be paid shortly" email — it does <strong style="color:var(--text);">not</strong> move any money. You still deposit into each MT5 account yourself.
+    </p>
+    <input type="file" id="rebate-file-input" accept=".csv,.txt" style="margin-bottom:10px;font-size:12px;color:var(--text-muted);" onchange="loadRebateFile(this)">
+    <textarea id="rebate-csv-input" class="admin-input" style="width:100%;height:110px;font-family:monospace;font-size:12px;resize:vertical;" placeholder="client_email,rebate_amount,active_referrals,trading_referrals,total_lots
+beta@test.com,42.50,3,2,20"></textarea>
+    <button class="btn-sm green" style="margin-top:10px;" onclick="previewRebates()">Preview</button>
+    <div id="rebate-preview" style="margin-top:16px;"></div>
   </div>
 </div>
 
@@ -665,6 +685,16 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Normalizes old single-account records (mt5_login/mt5_server) and new
+  // multi-account records (mt5_accounts array) into one consistent shape,
+  // so the rest of the code never has to care which format a given client
+  // was created under.
+  function getMt5Accounts(user) {
+    if (user.mt5_accounts && user.mt5_accounts.length) return user.mt5_accounts;
+    if (user.mt5_login) return [{ login: user.mt5_login, server: user.mt5_server || 'Harmonic' }];
+    return [];
+  }
+
   function formatStatus(s) {
     const map = {
       pending: 'Pending', pending_kyc: 'KYC Req',
@@ -698,6 +728,7 @@
     content.classList.add('show');
 
     const kyc = user.kyc || {};
+    const mt5Accounts = getMt5Accounts(user);
     const statusColor = {
       active: 'var(--green)', kyc_approved: 'var(--green)',
       kyc_submitted: 'var(--yellow)', mt5_requested: 'var(--yellow)',
@@ -771,12 +802,20 @@
       </div>
       ` : ''}
 
-      ${user.status === 'active' || user.mt5_login ? `
-      <div class="section-divider">MT5 Credentials</div>
-      <div class="info-grid" style="margin-bottom:28px;">
-        <div class="info-item"><div class="info-label">MT5 Login</div><div class="info-value">${escapeHtml(user.mt5_login) || '—'}</div></div>
-        <div class="info-item"><div class="info-label">MT5 Password</div><div class="info-value">${user.mt5_password ? escapeHtml(user.mt5_password) + ' (legacy — will clear on next save)' : 'Sent via email'}</div></div>
-        <div class="info-item"><div class="info-label">MT5 Server</div><div class="info-value">${escapeHtml(user.mt5_server) || 'Harmonic'}</div></div>
+      ${mt5Accounts.length ? `
+      <div class="section-divider">MT5 Accounts (${mt5Accounts.length}/3)</div>
+      <div style="margin-bottom:28px;">
+        ${mt5Accounts.map((acc, i) => `
+          <div class="info-grid" style="margin-bottom:16px;padding-bottom:16px;${i < mt5Accounts.length - 1 ? 'border-bottom:1px solid var(--line);' : ''}">
+            <div class="info-item"><div class="info-label">Login</div><div class="info-value">${escapeHtml(acc.login) || '—'}</div></div>
+            <div class="info-item"><div class="info-label">Server</div><div class="info-value">${escapeHtml(acc.server) || 'Harmonic'}</div></div>
+            <div class="info-item"><div class="info-label">Password</div><div class="info-value">Sent via email</div></div>
+            <div class="info-item">
+              <div class="info-label">&nbsp;</div>
+              <button class="btn-sm" style="padding:3px 10px;font-size:11px;" onclick="showMT5Form('${uid}', ${i})">Replace</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
       ` : ''}
 
@@ -807,7 +846,9 @@
       actionBtns.innerHTML = `<button class="btn-sm green" onclick="showMT5Form('${uid}')">+ Enter MT5 Credentials</button>`;
       showMT5Form(uid);
     } else if (user.status === 'active') {
-      actionBtns.innerHTML = `<button class="btn-sm" onclick="showMT5Form('${uid}')">Edit MT5 Credentials</button>`;
+      actionBtns.innerHTML = mt5Accounts.length < 3
+        ? `<button class="btn-sm green" onclick="showMT5Form('${uid}')">+ Add Another Account (${mt5Accounts.length}/3)</button>`
+        : `<span style="font-size:11px;color:var(--text-muted);">3/3 accounts — remove none supported, use Replace on an existing one</span>`;
     }
 
     if (user.status === 'kyc_rejected') {
@@ -816,9 +857,11 @@
   };
 
   // ── REFERRAL CREDIT
-  // A referral only counts once the referred client is actually approved,
-  // not just on signup — and only ever once per client, guarded by
-  // referral_credited so re-approving someone can't double-count them.
+  // A referral only counts once the referred client's first MT5 account is
+  // created (not just on KYC approval, and not on their 2nd/3rd account) —
+  // so if the client disputes their commission, we know exactly how many
+  // referrals are actually trading. Guarded by referral_credited so it can
+  // never double-count.
   async function creditReferralIfNeeded(user) {
     if (!user.referred_by || user.referral_credited) return;
     const referrer = allUsers.find(u => u.referral_code === user.referred_by);
@@ -836,7 +879,8 @@
     const u = allUsers.find(u => u.uid === uid);
     if (u) {
       u.status = 'kyc_approved';
-      await creditReferralIfNeeded(u);
+      // Referral credit happens when their MT5 account is actually created,
+      // not here — see saveMT5.
     }
     showToast('KYC approved successfully', 'success');
     renderUserList();
@@ -893,37 +937,49 @@
   };
 
   // ── MT5 CREDENTIALS
-  window.showMT5Form = function(uid) {
+  // slotIndex undefined/null = adding a new account (up to 3 total).
+  // slotIndex a number = replacing that specific existing account.
+  window.showMT5Form = function(uid, slotIndex) {
     const user = allUsers.find(u => u.uid === uid);
+    const accounts = getMt5Accounts(user);
+    const isReplace = slotIndex !== undefined && slotIndex !== null;
+    if (!isReplace && accounts.length >= 3) { alert('This client already has 3 MT5 accounts, the maximum allowed.'); return; }
+    const existingLogin = isReplace ? (accounts[slotIndex]?.login || '') : '';
+
     document.getElementById('action-form-area').innerHTML = `
       <div class="action-box">
-        <div class="action-box-title">Enter MT5 Credentials</div>
+        <div class="action-box-title">${isReplace ? 'Replace MT5 Account' : `Add MT5 Account (${accounts.length + 1} of 3)`}</div>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
-          The password is emailed directly to the client and is never stored here — you'll need to re-enter it each time, including to resend it. Entering a <em>different</em> login than the one on file replaces their account and keeps the old one on record below, rather than losing it.
+          The password is emailed directly to the client and is never stored here — you'll need to re-enter it each time, including to resend it.${isReplace ? ' This replaces the account below and keeps the old one on record.' : ''}
         </p>
         <div class="form-row-admin">
           <div>
             <label class="auth-label">MT5 Login</label>
-            <input type="text" class="admin-input" id="mt5-login-input" value="${escapeHtml(user?.mt5_login) || ''}" placeholder="e.g. 206500">
+            <input type="text" class="admin-input" id="mt5-login-input" value="${escapeHtml(existingLogin)}" placeholder="e.g. 206500">
           </div>
           <div>
             <label class="auth-label">MT5 Password</label>
             <input type="text" class="admin-input" id="mt5-pass-input" value="" placeholder="e.g. Abc@12345">
           </div>
         </div>
-        <button class="btn-sm green" style="margin-top:4px;" onclick="saveMT5('${uid}')">
+        <button class="btn-sm green" style="margin-top:4px;" onclick="saveMT5('${uid}', ${isReplace ? slotIndex : 'null'})">
           Email to Client & Activate <span class="spinner" id="mt5-spinner"></span>
         </button>
       </div>
     `;
   };
 
-  window.saveMT5 = async function(uid) {
+  window.saveMT5 = async function(uid, slotIndex) {
     const login = document.getElementById('mt5-login-input').value.trim();
     const pass = document.getElementById('mt5-pass-input').value.trim();
     if (!login || !pass) { alert('Please enter both MT5 login and password.'); return; }
     const user = allUsers.find(u => u.uid === uid);
     if (!user || !user.email) { alert('This client has no email on file — cannot send credentials.'); return; }
+
+    const accounts = getMt5Accounts(user);
+    const isReplace = slotIndex !== undefined && slotIndex !== null;
+    if (!isReplace && accounts.length >= 3) { alert('This client already has 3 MT5 accounts, the maximum allowed.'); return; }
+    const wasAlreadyActive = user.status === 'active';
 
     document.getElementById('mt5-spinner').classList.add('show');
 
@@ -944,29 +1000,38 @@
       return;
     }
 
-    const updates = {
-      mt5_login: login, mt5_password: deleteField(),
-      mt5_server: 'Harmonic', status: 'active'
-    };
-    // Replacing a client's account (rather than setting it for the first time)
-    // keeps a record of the old one instead of silently losing it.
-    const isReplacement = user.mt5_login && user.mt5_login !== login;
-    if (isReplacement) {
-      updates.mt5_history = arrayUnion({
-        login: user.mt5_login,
-        server: user.mt5_server || 'Harmonic',
-        replaced_at: new Date().toISOString()
-      });
+    const newAccounts = accounts.slice();
+    let historyEntry = null;
+    if (isReplace) {
+      const old = newAccounts[slotIndex];
+      if (old && old.login !== login) {
+        historyEntry = { login: old.login, server: old.server || 'Harmonic', replaced_at: new Date().toISOString() };
+      }
+      newAccounts[slotIndex] = { login, server: 'Harmonic' };
+    } else {
+      newAccounts.push({ login, server: 'Harmonic' });
     }
 
+    const updates = {
+      mt5_accounts: newAccounts,
+      // Clean up the old single-account fields so a migrated record doesn't
+      // carry stale duplicate data alongside the new array.
+      mt5_login: deleteField(), mt5_password: deleteField(), mt5_server: deleteField(),
+      status: 'active'
+    };
+    if (historyEntry) updates.mt5_history = arrayUnion(historyEntry);
+
     await updateDoc(doc(db, 'users', uid), updates);
-    if (isReplacement) {
-      user.mt5_history = [...(user.mt5_history || []), { login: user.mt5_login, server: user.mt5_server || 'Harmonic', replaced_at: new Date().toISOString() }];
-    }
-    user.mt5_login = login;
+    user.mt5_accounts = newAccounts;
+    delete user.mt5_login;
     delete user.mt5_password;
+    delete user.mt5_server;
+    if (historyEntry) user.mt5_history = [...(user.mt5_history || []), historyEntry];
     user.status = 'active';
-    showToast(isReplacement ? 'New account emailed to the client. Old account kept on record.' : 'Credentials emailed to the client. Account is now active!', 'success');
+    // Credit the referrer only on first activation — not when a client who's
+    // already active adds a 2nd or 3rd account.
+    if (!wasAlreadyActive) await creditReferralIfNeeded(user);
+    showToast(isReplace ? 'New account emailed to the client. Old account kept on record.' : 'Account emailed to the client and added!', 'success');
     renderUserList();
     selectUser(uid);
   };
@@ -1028,6 +1093,206 @@
   window.jumpToClientFromTree = function(uid) {
     hideReferralTree();
     selectUser(uid);
+  };
+
+  // ── REFERRAL DATA EXPORT
+  // One row per MT5 login (not per client) so the sheet can match Login
+  // directly against the pasted MT5 manager report. referred_by is the only
+  // field needed to walk the referral chain back up from there.
+  function csvEscape(val) {
+    const s = String(val ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function downloadFile(content, filename, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  window.exportReferralData = function() {
+    const rows = [['mt5_login', 'client_name', 'client_email', 'referral_code', 'referred_by', 'status']];
+    allUsers.forEach(u => {
+      getMt5Accounts(u).forEach(acc => {
+        rows.push([acc.login || '', u.fullname || '', u.email || '', u.referral_code || '', u.referred_by || '', u.status || '']);
+      });
+    });
+    if (rows.length === 1) { showToast('No clients with MT5 accounts yet — nothing to export.', 'error'); return; }
+    downloadFile(rows.map(r => r.map(csvEscape).join(',')).join('\n'), `valmuntra-referral-export-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+  };
+
+  // ── REBATE NOTIFICATIONS
+  // The rebate amount itself only ever exists in the Google Sheet (it needs
+  // the pasted MT5 commission/volume report, which Firestore knows nothing
+  // about) — this just takes that sheet's output and, in one batch, emails
+  // each client and logs the amount to their record for a paper trail.
+  let pendingRebates = [];
+
+  window.loadRebateFile = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { document.getElementById('rebate-csv-input').value = e.target.result; };
+    reader.readAsText(file);
+  };
+
+  // Accepts comma-delimited (downloaded CSV) or tab-delimited (pasted
+  // straight from a Google Sheets selection) input, auto-detected.
+  function parseDelimitedText(text) {
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+    if (!lines.length) return [];
+    const delim = lines[0].includes('\t') ? '\t' : ',';
+    const splitLine = (line) => {
+      if (delim === '\t') return line.split('\t').map(s => s.trim());
+      const result = [];
+      let cur = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') inQuotes = !inQuotes;
+        else if (c === ',' && !inQuotes) { result.push(cur); cur = ''; }
+        else cur += c;
+      }
+      result.push(cur);
+      return result.map(s => s.trim().replace(/^"|"$/g, ''));
+    };
+    const header = splitLine(lines[0]).map(h => h.toLowerCase().trim());
+    return lines.slice(1).map(line => {
+      const cells = splitLine(line);
+      const row = {};
+      header.forEach((h, i) => row[h] = (cells[i] || '').trim());
+      return row;
+    });
+  }
+
+  window.previewRebates = function() {
+    const rows = parseDelimitedText(document.getElementById('rebate-csv-input').value);
+    if (!rows.length) { showToast('Paste some rows first.', 'error'); return; }
+
+    pendingRebates = rows.map(row => {
+      const email = (row.client_email || row.email || '').toLowerCase();
+      return {
+        email,
+        amount: row.rebate_amount || row.amount || '0',
+        activeReferrals: row.active_referrals || '',
+        tradingReferrals: row.trading_referrals || '',
+        totalLots: row.total_lots || '',
+        user: allUsers.find(u => (u.email || '').toLowerCase() === email)
+      };
+    });
+
+    const matched = pendingRebates.filter(r => r.user);
+    const unmatchedCount = pendingRebates.length - matched.length;
+
+    document.getElementById('rebate-preview').innerHTML = `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+        ${matched.length} client${matched.length === 1 ? '' : 's'} matched${unmatchedCount ? `, <span style="color:var(--red-err);">${unmatchedCount} not found in Firestore — will be skipped</span>` : ''}.
+      </div>
+      <div style="max-height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;">
+        ${pendingRebates.map(r => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;">
+            <span>${r.user ? '✓' : '✗'} ${escapeHtml(r.user ? r.user.fullname : r.email)} — ${escapeHtml(r.email)}</span>
+            <span style="font-weight:600;">$${escapeHtml(r.amount)}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${matched.length ? `<button class="btn-sm green" style="margin-top:14px;" onclick="sendAllRebates()">Send ${matched.length} Notification${matched.length === 1 ? '' : 's'} & Mark Paid <span class="spinner" id="rebate-send-spinner"></span></button>` : ''}
+    `;
+  };
+
+  // Builds the full bilingual email body ourselves rather than relying on
+  // per-field template variables, since this reuses the shared staff-alert
+  // template (to stay within EmailJS's 2-template free-tier cap) and that
+  // template's body is just a {{message}} passthrough.
+  function buildRebateMessage(r) {
+    const name = r.user.fullname || '';
+    return `مرحباً ${name}،
+
+تم احتساب عمولة الإحالة الخاصة بك بمبلغ ${r.amount}$ وستُودع في حسابك خلال الساعات القليلة القادمة (حتى ٣ ساعات تقريباً).
+
+تفاصيل الإحالات:
+- عدد الإحالات النشطة: ${r.activeReferrals || '—'}
+- عدد من قام بالتداول: ${r.tradingReferrals || '—'}
+- إجمالي اللوتات المتداولة: ${r.totalLots || '—'}
+
+إذا كان لديك أي استفسار حول هذا المبلغ، تواصل معنا عبر واتساب وسنكون سعداء بمساعدتك.
+
+فريق Valmuntra
+
+-----------------------------------
+
+Hello ${name},
+
+Your referral rebate has been calculated at $${r.amount} and will be deposited into your account shortly (within approximately 3 hours).
+
+Referral details:
+- Active referrals: ${r.activeReferrals || '—'}
+- Referrals who have traded: ${r.tradingReferrals || '—'}
+- Total lots traded: ${r.totalLots || '—'}
+
+If you have any questions about this amount, reach out to us on WhatsApp and we'll be happy to help.
+
+The Valmuntra Team`;
+  }
+
+  window.sendAllRebates = async function() {
+    const toSend = pendingRebates.filter(r => r.user);
+    const spinner = document.getElementById('rebate-send-spinner');
+    if (spinner) spinner.classList.add('show');
+    let sent = 0, failed = 0;
+
+    for (const r of toSend) {
+      try {
+        // Reuses the shared staff-notification template (its "To Email" field
+        // is set to {{to_email}} so it can go to a client instead of
+        // support@valmuntra.com) rather than a dedicated template, to stay
+        // within EmailJS's 2-template free-tier cap.
+        await emailjs.send('service_0oshg5a', 'template_k00znup', {
+          to_email: r.user.email,
+          reply_to: 'support@valmuntra.com',
+          subject: 'Valmuntra — Rebate Notification / إشعار عمولة الإحالة',
+          message: buildRebateMessage(r)
+        });
+        await updateDoc(doc(db, 'users', r.user.uid), {
+          last_rebate_amount: r.amount,
+          last_rebate_paid_at: serverTimestamp(),
+          rebate_history: arrayUnion({
+            amount: r.amount,
+            active_referrals: r.activeReferrals,
+            trading_referrals: r.tradingReferrals,
+            total_lots: r.totalLots,
+            notified_at: new Date().toISOString()
+          })
+        });
+        sent++;
+      } catch (e) {
+        console.error('Rebate notification failed for', r.email, e);
+        failed++;
+      }
+      await new Promise(res => setTimeout(res, 300));
+    }
+
+    if (spinner) spinner.classList.remove('show');
+    showToast(`${sent} notification${sent === 1 ? '' : 's'} sent${failed ? `, ${failed} failed` : ''}.`, failed ? 'error' : 'success');
+    pendingRebates = [];
+    hideRebatesModal();
+    renderUserList();
+  };
+
+  window.showRebatesModal = function() {
+    document.getElementById('rebate-csv-input').value = '';
+    document.getElementById('rebate-file-input').value = '';
+    document.getElementById('rebate-preview').innerHTML = '';
+    document.getElementById('rebates-modal').classList.add('show');
+  };
+
+  window.hideRebatesModal = function() {
+    document.getElementById('rebates-modal').classList.remove('show');
   };
 
   window.createClientManually = async function() {
@@ -1092,8 +1357,7 @@
 
       await setDoc(doc(db, 'users', uid), {
         fullname, phone, email, uid,
-        mt5_login: hasMT5 ? mt5Login : null,
-        mt5_server: 'Harmonic',
+        mt5_accounts: hasMT5 ? [{ login: mt5Login, server: 'Harmonic' }] : [],
         status: finalStatus,
         referral_code: refCode,
         referred_by: referredBy || null,

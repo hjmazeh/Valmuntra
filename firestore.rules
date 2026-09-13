@@ -39,7 +39,11 @@ service cloud.firestore {
         unchanged('mt5_login') &&
         unchanged('mt5_password') &&
         unchanged('mt5_server') &&
+        unchanged('mt5_accounts') &&
         unchanged('mt5_history') &&
+        unchanged('last_rebate_amount') &&
+        unchanged('last_rebate_paid_at') &&
+        unchanged('rebate_history') &&
         unchanged('referral_code') &&
         unchanged('referral_count') &&
         unchanged('referral_credited') &&

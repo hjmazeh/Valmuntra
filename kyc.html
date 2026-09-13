@@ -791,13 +791,12 @@
 
       // Send notification email to CS team
       try {
+        const fullnameVal = document.getElementById('fullname').value.trim();
         await emailjs.send('service_0oshg5a', 'template_k00znup', {
-          subject: 'New KYC Submission — ' + document.getElementById('fullname').value.trim(),
-          client_name: document.getElementById('fullname').value.trim(),
-          client_email: currentUser.email,
-          client_phone: '',
-          submitted_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' }),
-          message: 'New KYC submission received. Login to review: https://valmuntra.com/admin.html'
+          to_email: 'support@valmuntra.com',
+          reply_to: currentUser.email,
+          subject: 'New KYC Submission — ' + fullnameVal,
+          message: `Client: ${fullnameVal}\nEmail: ${currentUser.email}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nNew KYC submission received. Login to review: https://valmuntra.com/admin.html`
         });
       } catch(emailErr) {
         console.log('Email notification failed:', emailErr);
