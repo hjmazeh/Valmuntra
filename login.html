@@ -177,6 +177,23 @@
   }
   .form-error.show { display: block; }
 
+  /* phone with country code */
+  .phone-wrap { display: flex; gap: 8px; }
+  body:not(.en) .phone-wrap { flex-direction: row-reverse; }
+  .phone-code {
+    width: 80px;
+    flex-shrink: 0;
+    padding: 13px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    text-align: center;
+  }
+  .phone-input { flex: 1; }
+
   .forgot-link {
     display: block;
     text-align: left;
@@ -240,6 +257,35 @@
   }
   .form-signup a { color: var(--red-lt); text-decoration: none; }
   .form-signup a:hover { text-decoration: underline; }
+
+  /* ── DIVIDER + GOOGLE SIGN-IN */
+  .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .divider span { font-size: 11px; color: var(--text-muted); font-family: 'Barlow', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .google-btn {
+    width: 100%;
+    padding: 13px;
+    background: #fff;
+    color: #3c4043;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Barlow', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: box-shadow 0.2s, opacity 0.2s;
+  }
+  .google-btn:hover { box-shadow: 0 1px 6px rgba(0,0,0,0.3); }
+  .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ── GOOGLE PROFILE COMPLETION (new Google sign-ins need a phone number) */
+  .google-profile-box { display: none; }
+  .google-profile-box.show { display: block; }
 
   /* reset password box */
   .reset-box { display: none; }
@@ -391,11 +437,53 @@
           <span class="spinner" id="spinner"></span>
         </button>
 
+        <div class="divider"><span><span class="lang-ar">أو</span><span class="lang-en">OR</span></span></div>
+
+        <button type="button" class="google-btn" id="google-btn" onclick="startGoogleLogin()">
+          <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+          <span class="lang-ar">تسجيل الدخول عبر Google</span>
+          <span class="lang-en">Continue with Google</span>
+          <span class="spinner" id="google-spinner"></span>
+        </button>
+
         <p class="form-signup">
           <span class="lang-ar">ليس لديك حساب؟ <a href="signup.html">إنشاء حساب جديد</a></span>
           <span class="lang-en">Don't have an account? <a href="signup.html">Create one</a></span>
         </p>
       </form>
+    </div>
+
+    <!-- Google sign-in: one more step to collect a phone number for brand-new accounts -->
+    <div class="google-profile-box" id="google-profile-box">
+      <h1 class="login-title">
+        <span class="lang-ar">خطوة أخيرة</span>
+        <span class="lang-en">One More Step</span>
+      </h1>
+      <p class="login-sub">
+        <span class="lang-ar">أدخل رقم هاتفك لإكمال إنشاء حسابك</span>
+        <span class="lang-en">Enter your phone number to finish setting up your account</span>
+      </p>
+
+      <div class="global-error" id="google-profile-error"></div>
+
+      <div class="form-group">
+        <label class="form-label lang-ar">رقم الهاتف</label>
+        <label class="form-label lang-en">Phone Number</label>
+        <div class="phone-wrap">
+          <input type="text" class="form-input phone-code" id="g-phone-code" value="+963" placeholder="+963">
+          <input type="tel" class="form-input phone-input" id="g-phone" placeholder="9XXXXXXXX" autocomplete="tel">
+        </div>
+        <div class="form-error" id="g-phone-error">
+          <span class="lang-ar">الرجاء إدخال رقم هاتف صحيح</span>
+          <span class="lang-en">Please enter a valid phone number</span>
+        </div>
+      </div>
+
+      <button type="button" class="form-submit" id="google-profile-btn" onclick="completeGoogleProfile()">
+        <span class="lang-ar">متابعة</span>
+        <span class="lang-en">Continue</span>
+        <span class="spinner" id="google-profile-spinner"></span>
+      </button>
     </div>
 
     <!-- Reset Password -->
@@ -480,7 +568,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBDAYeJS-bIgNBOoARYUjR4RLTz2Yqnn3c",
@@ -493,11 +582,18 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // While a Google sign-in is being handled by startGoogleLogin(), suppress this
+  // listener's own redirect so a brand-new user can be routed to the phone-number
+  // step instead of being bounced straight to portal.html before their profile exists.
+  let googleFlowInProgress = false;
 
   // If already logged in with a verified email, go straight to portal.
   // An unverified session sitting on this page (e.g. from before verification
   // was required) gets signed out instead of let through.
   onAuthStateChanged(auth, (user) => {
+    if (googleFlowInProgress) return;
     if (user && user.emailVerified) {
       window.location.href = 'portal.html';
     } else if (user && !user.emailVerified) {
@@ -608,6 +704,93 @@
       spinner.classList.remove('show');
       errEl.textContent = isAr ? 'حدث خطأ. تحقق من البريد الإلكتروني وحاول مجدداً.' : 'An error occurred. Check the email and try again.';
       errEl.classList.add('show');
+    }
+  };
+
+  // ── Google Sign-In ──
+  const googleProvider = new GoogleAuthProvider();
+  let pendingGoogleUser = null;
+
+  window.startGoogleLogin = async function() {
+    const btn = document.getElementById('google-btn');
+    const spinner = document.getElementById('google-spinner');
+    const isAr = !document.getElementById('body').classList.contains('en');
+    googleFlowInProgress = true;
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+
+      if (snap.exists()) {
+        window.location.href = 'portal.html';
+        return;
+      }
+
+      // First time signing in with this Google account — collect a phone number
+      pendingGoogleUser = user;
+      document.getElementById('form-wrap').classList.add('hide');
+      document.getElementById('google-profile-box').classList.add('show');
+    } catch (error) {
+      googleFlowInProgress = false;
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') return;
+      const errEl = document.getElementById('global-error');
+      errEl.classList.add('show');
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        errEl.textContent = isAr ? 'هذا البريد مسجّل بالفعل بكلمة مرور. يرجى تسجيل الدخول بكلمة المرور.' : 'This email is already registered with a password. Please sign in with your password instead.';
+      } else {
+        errEl.textContent = isAr ? 'حدث خطأ أثناء تسجيل الدخول عبر Google. حاول مجدداً.' : 'Something went wrong signing in with Google. Please try again.';
+      }
+    }
+  };
+
+  window.completeGoogleProfile = async function() {
+    const isAr = !document.getElementById('body').classList.contains('en');
+    const phoneCode = document.getElementById('g-phone-code').value.trim();
+    const phone = document.getElementById('g-phone').value.trim();
+
+    document.getElementById('g-phone-error').classList.remove('show');
+    document.getElementById('google-profile-error').classList.remove('show');
+
+    if (!phone || phone.length < 7) {
+      document.getElementById('g-phone-error').classList.add('show');
+      return;
+    }
+
+    const btn = document.getElementById('google-profile-btn');
+    const spinner = document.getElementById('google-profile-spinner');
+    btn.disabled = true;
+    spinner.classList.add('show');
+
+    try {
+      const user = pendingGoogleUser;
+      await setDoc(doc(db, 'users', user.uid), {
+        fullname: user.displayName || user.email.split('@')[0],
+        phone: phoneCode + phone,
+        email: user.email,
+        uid: user.uid,
+        mt5_login: null,
+        mt5_password: null,
+        mt5_server: 'Harmonic',
+        status: 'pending',
+        referral_code: user.uid.substring(0, 8).toUpperCase(),
+        referred_by: null,
+        attribution: null,
+        created_at: serverTimestamp()
+      });
+      window.location.href = 'portal.html';
+    } catch (error) {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      const errEl = document.getElementById('google-profile-error');
+      errEl.classList.add('show');
+      errEl.textContent = isAr ? 'حدث خطأ. الرجاء المحاولة مجدداً.' : 'An error occurred. Please try again.';
     }
   };
 </script>
