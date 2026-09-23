@@ -11,6 +11,19 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin == true;
     }
 
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_super_admin == true;
+    }
+
+    // A cross-brand staff directory -- lives only in this project (the one
+    // guaranteed to always exist) so a super admin can see who has access to
+    // what across every brand, even though each brand's actual Auth/admin
+    // flag lives in its own separate project.
+    match /staff/{staffId} {
+      allow read, write: if isSuperAdmin();
+    }
+
     match /users/{userId} {
       function isOwner() {
         return isSignedIn() && request.auth.uid == userId;
@@ -23,13 +36,17 @@ service cloud.firestore {
       allow get: if isOwner() || isAdmin();
       allow list: if isAdmin();
 
-      // Signup: client creates their own doc, but only with safe starting values.
-      allow create: if isOwner()
+      // Signup: client creates their own doc, but only with safe starting
+      // values -- OR an admin creates a fully-formed client doc directly
+      // (any status, MT5 already set) via "Create Client Manually".
+      allow create: if isAdmin() || (
+        isOwner()
         && request.resource.data.uid == userId
         && (!('is_admin' in request.resource.data) || request.resource.data.is_admin == false)
         && request.resource.data.status == 'pending'
         && request.resource.data.mt5_login == null
-        && request.resource.data.mt5_password == null;
+        && request.resource.data.mt5_password == null
+      );
 
       // Self-service updates: only two transitions are allowed, and only
       // if none of the privileged fields are touched.
