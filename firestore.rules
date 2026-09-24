@@ -24,6 +24,56 @@ service cloud.firestore {
       allow read, write: if isSuperAdmin();
     }
 
+    // Small admin-editable operational settings (e.g. the current Whish
+    // Money collection number) -- readable by any signed-in client so the
+    // portal can show it, editable only by staff, no redeploy needed to
+    // change a value.
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Staff activity log -- every admin action (KYC, MT5, manual client
+    // creation, rebates, staff provisioning), staff-only in both directions.
+    // Append-only in practice: the panel never edits or deletes an entry.
+    match /admin_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+    }
+
+    // Deposit requests: client submits a receipt + claimed amount; every
+    // status transition after that (sent to GoogleCell for confirmation,
+    // deposited, rejected) is staff-only.
+    match /funding_requests/{requestId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.approved_amount == null
+        && request.resource.data.resolved_by == null;
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Withdrawal requests: client submits amount + destination; balance
+    // deduction, sending to GoogleCell, uploading their completion receipt,
+    // and rejection are all staff-only transitions.
+    match /withdrawal_requests/{requestId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.resolved_by == null;
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     match /users/{userId} {
       function isOwner() {
         return isSignedIn() && request.auth.uid == userId;
