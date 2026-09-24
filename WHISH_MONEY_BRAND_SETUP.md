@@ -69,10 +69,17 @@ the console error (fastest way — each error names the exact fields needed).
 
 | Collection | Fields | Used by |
 |---|---|---|
-| `funding_requests` | `status` (Arrays), `created_at` (Desc) | staff pending queue + staff history |
-| `withdrawal_requests` | `status` (Arrays), `created_at` (Desc) | staff pending queue + staff history |
+| `funding_requests` | `status` (Ascending), `created_at` (Desc) | staff pending queue + staff history |
+| `withdrawal_requests` | `status` (Ascending), `created_at` (Desc) | staff pending queue + staff history |
 | `funding_requests` | `uid` (Asc), `created_at` (Desc) | client portal's own history |
 | `withdrawal_requests` | `uid` (Asc), `created_at` (Desc) | client portal's own history |
+
+**Don't guess the field mode by eye** — `status` here is filtered with `in`,
+which needs **Ascending**, not **Arrays** (Arrays mode is only for
+`array-contains`/`array-contains-any` queries, which this isn't; picking it
+by mistake once cost a wasted index build and a debugging round-trip). The
+reliable way to get this right every time is the "click through the error
+link" method above — it always encodes the exact correct mode.
 
 `admin_logs` and `users` only ever use a single-field `orderBy`, so they need
 no composite index.
