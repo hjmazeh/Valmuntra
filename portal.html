@@ -767,7 +767,7 @@
           to_email: 'support@valmuntra.com',
           reply_to: user.email,
           subject: 'MT5 Account Requested — ' + (data.fullname || ''),
-          message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\n${status === 'active' ? 'Client is already active and has requested an additional MT5 account.' : 'Client is KYC-approved and has requested an MT5 account.'} Login to review: https://valmuntra.com/admin.html`
+          message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\n${status === 'active' ? 'Client is already active and has requested an additional MT5 account.' : 'Client is KYC-approved and has requested an MT5 account.'} Login to review: https://staff.tratech.me/`
         });
       } catch (emailErr) {
         console.log('MT5 request notification failed:', emailErr);
