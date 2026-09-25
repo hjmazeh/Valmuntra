@@ -819,7 +819,7 @@
           to_email: 'support@valmuntra.com',
           reply_to: currentUser.email,
           subject: 'New KYC Submission — ' + fullnameVal,
-          message: `Client: ${fullnameVal}\nEmail: ${currentUser.email}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nNew KYC submission received. Please log in to the staff panel to review.`
+          message: `Client: ${fullnameVal}\nEmail: ${currentUser.email}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nNew KYC submission received.`
         });
       } catch(emailErr) {
         console.log('Email notification failed:', emailErr);
