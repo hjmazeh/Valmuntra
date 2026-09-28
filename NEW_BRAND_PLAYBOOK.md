@@ -213,6 +213,20 @@ report — verify with a cache-busted URL (`?cachebust=<anything>`) first.
   both need the domain added, and Google's version only accepts top-level
   registrable domains (rejects a `www.` subdomain entry, but the top-level
   entry already covers it).
+- **Restricting the Firebase browser API key by website breaks Google
+  Sign-In unless `<project>.firebaseapp.com/*` is on the list.** The Google
+  popup runs on that domain (`/__/auth/handler`), so if it isn't allowed the
+  popup just says "The requested action is invalid." Hit on Valmuntra after
+  locking its key down; fixed by adding `valmuntra.firebaseapp.com/*`. Also
+  keep `<project>.firebaseapp.com` in Google's OAuth authorized domains.
+- **Firebase's default email sender gets rejected by Gmail on a custom
+  domain.** Set up Google Workspace for the brand domain first, then point
+  Firebase Auth → Templates → SMTP settings at `smtp.gmail.com:465` (SSL)
+  with a Workspace app password for `support@<brand>`. That's how both
+  HarmonyFX and Valmuntra send verification/password-reset mail now.
+- **The OAuth "User support email" dropdown only offers accounts with access
+  to the Google Cloud project.** To use `support@<brand>` there, grant it a
+  role in IAM first and sign in as it.
 - **Same email, different sign-in provider, same project → same account.**
   See §3's gotcha above. Don't test a "new Google sign-up" flow with an
   email that already exists on the project in any form.
