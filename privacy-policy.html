@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سياسة الخصوصية — Valmuntra</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red:        #6A0C0E;
+    --red-lt:     #8B1517;
+    --red-border: rgba(106,12,14,0.3);
+    --bg:         #111111;
+    --bg2:        #181818;
+    --line:       rgba(255,255,255,0.07);
+    --white:      #FFFFFF;
+    --text:       #E8E8E8;
+    --text-mid:   #999999;
+    --text-muted: #666666;
+  }
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.8; direction: rtl; text-align: right;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 48px; border-bottom: 1px solid var(--line); background: var(--bg2);
+  }
+  .nav-logo img { height: 140px; width: auto; margin: -40px 0; display: block; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-back { color: var(--text-mid); text-decoration: none; font-size: 13px; }
+  .nav-back:hover { color: var(--white); }
+  .lang-toggle { display: flex; border: 1px solid var(--red-border); border-radius: 3px; overflow: hidden; }
+  .lang-btn {
+    padding: 5px 13px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    color: var(--text-muted); background: transparent; border: none; cursor: pointer;
+    font-family: 'Barlow', sans-serif; transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px 100px; }
+  h1 { font-size: 32px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+  .updated { font-size: 13px; color: var(--text-muted); margin-bottom: 40px; }
+  h2 {
+    font-size: 19px; font-weight: 700; color: var(--white); margin: 36px 0 12px;
+    padding-inline-start: 12px; border-inline-start: 3px solid var(--red-lt);
+  }
+  p, li { font-size: 15px; color: rgba(232,232,232,0.85); margin-bottom: 12px; }
+  ul { padding-inline-start: 20px; margin-bottom: 12px; }
+  strong { color: var(--white); }
+  a { color: #D98C8E; }
+  footer { text-align: center; padding: 28px; border-top: 1px solid var(--line); background: var(--bg2); }
+  footer p { font-size: 12px; color: var(--text-muted); font-family: 'Barlow', sans-serif; margin: 0; }
+  @media (max-width: 600px) {
+    nav { padding: 12px 20px; }
+    .nav-logo img { height: 110px; margin: -32px 0; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="index.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="index.html" class="nav-back">
+      <span class="lang-ar">→ العودة إلى valmuntra.com</span>
+      <span class="lang-en">← Back to valmuntra.com</span>
+    </a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1><span class="lang-ar">سياسة الخصوصية</span><span class="lang-en">Privacy Policy</span></h1>
+  <p class="updated"><span class="lang-ar">آخر تحديث: سبتمبر 2026</span><span class="lang-en">Last updated: September 2026</span></p>
+
+  <p>
+    <span class="lang-ar">توضح سياسة الخصوصية هذه كيفية قيام Valmuntra ("Valmuntra" أو "نحن" أو "لنا") بجمع واستخدام وحماية المعلومات عند استخدامك لموقعنا الإلكتروني (valmuntra.com) وبوابة العملاء ("الخدمات").</span>
+    <span class="lang-en">This Privacy Policy explains how Valmuntra ("Valmuntra", "we", "us", or "our") collects, uses, and protects information when you use our website (valmuntra.com) and client portal (the "Services").</span>
+  </p>
+
+  <h2><span class="lang-ar">1. المعلومات التي نجمعها</span><span class="lang-en">1. Information We Collect</span></h2>
+  <p>
+    <span class="lang-ar"><strong>معلومات الحساب</strong> التي تقدمها عند التسجيل: الاسم الكامل، رقم الهاتف، البريد الإلكتروني، وكلمة المرور (أو معلومات حساب Google الخاص بك إذا سجّلت الدخول عبر Google).</span>
+    <span class="lang-en"><strong>Account information</strong> you provide when you sign up: full name, phone number, email address, and password (or your Google account information if you sign up with Google).</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>معلومات التحقق من الهوية (KYC)</strong> التي نجمعها بمجرد بدء عملية التحقق من حساب التداول: تاريخ الميلاد، الجنسية، مدينة وبلد الإقامة، وثيقة هوية صادرة عن جهة حكومية (الوجه الأمامي والخلفي)، وصورة شخصية (سيلفي) لتأكيد الهوية. هذه المعلومات مطلوبة لتفعيل حساب تداول حقيقي وهي متطلب معياري في قطاع الخدمات المالية.</span>
+    <span class="lang-en"><strong>Identity verification (KYC) information</strong> we collect once you begin trading account verification: date of birth, nationality, city and country of residence, a government-issued ID (front and back), and a selfie photo for identity confirmation. This information is required to activate a live trading account and is a standard requirement across the financial services industry.</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>معلومات حساب التداول</strong>: بيانات تسجيل الدخول إلى MT5 وتفاصيل الخادم، وسجل بنشاط الحساب ذي الصلة بخدمة حسابك.</span>
+    <span class="lang-en"><strong>Trading account information</strong>: your MT5 login and server details, and a record of account activity relevant to servicing your account.</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>معلومات المعاملات المالية</strong>: طلبات الإيداع والسحب، المبالغ المعنية، طريقة الدفع المستخدمة (مثل ShamCash أو USDT أو طرق أخرى مدعومة)، تفاصيل الوجهة التي تقدمها لعمليات السحب (مثل رقم هاتف أو عنوان محفظة)، وصور الإيصالات التي ترفعها لتأكيد الإيداع.</span>
+    <span class="lang-en"><strong>Financial transaction information</strong>: deposit and withdrawal requests, the amounts involved, the payment method used (e.g. ShamCash, USDT, or other supported methods), destination details you provide for withdrawals (such as a phone number or wallet address), and receipt images you upload to confirm a deposit.</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>معلومات الإحالة</strong>: رمز الإحالة الفريد الخاص بك، وإذا تمت إحالتك من قبل عميل آخر، رمز الإحالة المستخدم.</span>
+    <span class="lang-en"><strong>Referral information</strong>: your unique referral code and, if you were referred by another client, the referral code used.</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>الاتصالات</strong>: الرسائل التي ترسلها إلينا عبر واتساب أو البريد الإلكتروني أو قنوات الدعم المرتبطة بالبوابة.</span>
+    <span class="lang-en"><strong>Communications</strong>: messages you send us through WhatsApp, email, or the support channels linked from the portal.</span>
+  </p>
+  <p>
+    <span class="lang-ar"><strong>معلومات تقنية</strong>: معلومات أساسية يتم تخزينها في متصفحك (مثل تفضيل اللغة) لجعل البوابة تعمل بشكل صحيح عبر الزيارات.</span>
+    <span class="lang-en"><strong>Technical information</strong>: basic information stored in your browser (such as your language preference) to make the portal work correctly across visits.</span>
+  </p>
+
+  <h2><span class="lang-ar">2. كيفية استخدامنا لمعلوماتك</span><span class="lang-en">2. How We Use Your Information</span></h2>
+  <ul>
+    <li><span class="lang-ar">لإنشاء وإدارة حسابك وحساب التداول الخاص بك.</span><span class="lang-en">To create and manage your account and trading account.</span></li>
+    <li><span class="lang-ar">للتحقق من هويتك، كما هو مطلوب قبل تفعيل حساب تداول حقيقي.</span><span class="lang-en">To verify your identity, as required before activating a live trading account.</span></li>
+    <li><span class="lang-ar">لمعالجة طلبات الإيداع والسحب وإبلاغك بحالتها.</span><span class="lang-en">To process deposit and withdrawal requests and communicate their status to you.</span></li>
+    <li><span class="lang-ar">لتشغيل برنامج الإحالة، بما في ذلك احتساب ودفع عمولات الإحالة.</span><span class="lang-en">To operate the referral program, including calculating and paying referral commissions.</span></li>
+    <li><span class="lang-ar">للرد على طلبات الدعم والإشعارات المهمة المتعلقة بالحساب.</span><span class="lang-en">To respond to support requests and important account notifications.</span></li>
+    <li><span class="lang-ar">للكشف عن الاحتيال ومنعه، والوفاء بالتزاماتنا القانونية والتنظيمية.</span><span class="lang-en">To detect and prevent fraud, and to meet our legal and regulatory obligations.</span></li>
+  </ul>
+
+  <h2><span class="lang-ar">3. كيفية مشاركة المعلومات</span><span class="lang-en">3. How Information Is Shared</span></h2>
+  <p><span class="lang-ar">لا نبيع معلوماتك الشخصية. نشارك المعلومات فقط عند الضرورة لتقديم الخدمات:</span><span class="lang-en">We do not sell your personal information. We share information only where necessary to provide the Services:</span></p>
+  <ul>
+    <li><span class="lang-ar">مع شركاء الدفع ومعالجة النقد الذين نتعامل معهم، فقط لمعالجة عمليات الإيداع والسحب الخاصة بك.</span><span class="lang-en">With payment and cash-handling partners we work with, solely to process your deposits and withdrawals.</span></li>
+    <li><span class="lang-ar">مع مزودي خدمة البريد الإلكتروني، فقط لتوصيل إشعارات الحساب والمعاملات إليك.</span><span class="lang-en">With email service providers, solely to deliver account and transaction notifications to you.</span></li>
+    <li><span class="lang-ar">مع مزودي البنية التحتية لدينا (مثل Google Firebase)، الذين يستضيفون أنظمتنا وبياناتنا.</span><span class="lang-en">With our infrastructure providers (such as Google Firebase), which host our systems and data.</span></li>
+    <li><span class="lang-ar">عند الاقتضاء بموجب القانون أو التنظيم أو طلب قانوني ساري.</span><span class="lang-en">Where required by law, regulation, or a valid legal request.</span></li>
+  </ul>
+
+  <h2><span class="lang-ar">4. أمن البيانات</span><span class="lang-en">4. Data Security</span></h2>
+  <p>
+    <span class="lang-ar">نستخدم تدابير معيارية في الصناعة لحماية معلوماتك، بما في ذلك ضوابط الوصول التي تقيّد من يمكنه في Valmuntra الاطلاع على بياناتك، وبنية تحتية سحابية آمنة. لا توجد طريقة نقل أو تخزين آمنة تماماً، ولا يمكننا ضمان الأمان المطلق.</span>
+    <span class="lang-en">We use industry-standard measures to protect your information, including access controls restricting who at Valmuntra can view your data, and secure cloud infrastructure. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.</span>
+  </p>
+
+  <h2><span class="lang-ar">5. الاحتفاظ بالبيانات</span><span class="lang-en">5. Data Retention</span></h2>
+  <p>
+    <span class="lang-ar">نحتفظ بمعلوماتك طالما كان حسابك نشطاً، ولفترة معقولة بعد ذلك حسب الحاجة للوفاء بالالتزامات القانونية والضريبية والتنظيمية المتعلقة بحفظ السجلات المعتادة في قطاع الخدمات المالية.</span>
+    <span class="lang-en">We retain your information for as long as your account is active, and for a reasonable period afterward as needed to meet legal, tax, and regulatory record-keeping obligations typical in the financial services industry.</span>
+  </p>
+
+  <h2><span class="lang-ar">6. حقوقك</span><span class="lang-en">6. Your Rights</span></h2>
+  <p>
+    <span class="lang-ar">يمكنك طلب الوصول إلى معلوماتك الشخصية أو تصحيحها أو حذفها من خلال التواصل معنا باستخدام التفاصيل أدناه، مع مراعاة التزامنا القانوني بالاحتفاظ ببعض السجلات (مثل سجلات KYC) لفترة مطلوبة حتى بعد تقديم طلب الحذف.</span>
+    <span class="lang-en">You may request access to, correction of, or deletion of your personal information by contacting us using the details below, subject to our legal obligation to retain certain records (for example, KYC records) for a required period even after a deletion request.</span>
+  </p>
+
+  <h2><span class="lang-ar">7. ملفات تعريف الارتباط والتخزين المحلي</span><span class="lang-en">7. Cookies &amp; Local Storage</span></h2>
+  <p>
+    <span class="lang-ar">نستخدم التخزين المحلي في متصفحك لتذكر إعدادات الراحة مثل لغتك المفضلة والإشعارات التي تم إغلاقها. تبقى هذه المعلومات على جهازك الخاص ولا تُستخدم للإعلانات أو التتبع عبر مواقع أخرى.</span>
+    <span class="lang-en">We use your browser's local storage to remember convenience settings such as your preferred language and dismissed notifications. This information stays on your own device and is not used for advertising or tracking across other websites.</span>
+  </p>
+
+  <h2><span class="lang-ar">8. خصوصية الأطفال</span><span class="lang-en">8. Children's Privacy</span></h2>
+  <p>
+    <span class="lang-ar">خدماتنا غير موجهة لأي شخص دون سن 18 عاماً، ولا يجوز استخدامها من قبله.</span>
+    <span class="lang-en">Our Services are not directed to, and may not be used by, anyone under the age of 18.</span>
+  </p>
+
+  <h2><span class="lang-ar">9. التغييرات على هذه السياسة</span><span class="lang-en">9. Changes to This Policy</span></h2>
+  <p>
+    <span class="lang-ar">قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سيتم توضيح أي تغييرات جوهرية من خلال تحديث تاريخ "آخر تحديث" أعلاه.</span>
+    <span class="lang-en">We may update this Privacy Policy from time to time. Material changes will be reflected by an updated "Last updated" date above.</span>
+  </p>
+
+  <h2><span class="lang-ar">10. تواصل معنا</span><span class="lang-en">10. Contact Us</span></h2>
+  <p>
+    <span class="lang-ar">إذا كانت لديك أسئلة حول سياسة الخصوصية هذه أو ترغب في ممارسة أي من حقوقك، تواصل معنا عبر <a href="mailto:support@valmuntra.com">support@valmuntra.com</a> أو عبر واتساب على <span dir="ltr">+963 984 699 071</span>.</span>
+    <span class="lang-en">If you have questions about this Privacy Policy or wish to exercise any of your rights, contact us at <a href="mailto:support@valmuntra.com">support@valmuntra.com</a> or via WhatsApp at +963 984 699 071.</span>
+  </p>
+</div>
+
+<footer>
+  <p>© 2026 Valmuntra Trading</p>
+</footer>
+
+<script>
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شروط الخدمة — Valmuntra</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red:        #6A0C0E;
+    --red-lt:     #8B1517;
+    --red-border: rgba(106,12,14,0.3);
+    --bg:         #111111;
+    --bg2:        #181818;
+    --line:       rgba(255,255,255,0.07);
+    --white:      #FFFFFF;
+    --text:       #E8E8E8;
+    --text-mid:   #999999;
+    --text-muted: #666666;
+  }
+  body {
+    font-family: 'Almarai', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.8; direction: rtl; text-align: right;
+  }
+  body.en { font-family: 'Barlow', sans-serif; direction: ltr; text-align: left; }
+
+  .lang-ar { display: block; }
+  .lang-en { display: none; }
+  span.lang-ar { display: inline; }
+  span.lang-en { display: none; }
+  body.en .lang-ar { display: none; }
+  body.en .lang-en { display: block; }
+  body.en span.lang-ar { display: none; }
+  body.en span.lang-en { display: inline; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 48px; border-bottom: 1px solid var(--line); background: var(--bg2);
+  }
+  .nav-logo img { height: 140px; width: auto; margin: -40px 0; display: block; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-back { color: var(--text-mid); text-decoration: none; font-size: 13px; }
+  .nav-back:hover { color: var(--white); }
+  .lang-toggle { display: flex; border: 1px solid var(--red-border); border-radius: 3px; overflow: hidden; }
+  .lang-btn {
+    padding: 5px 13px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    color: var(--text-muted); background: transparent; border: none; cursor: pointer;
+    font-family: 'Barlow', sans-serif; transition: all 0.2s;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px 100px; }
+  h1 { font-size: 32px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+  .updated { font-size: 13px; color: var(--text-muted); margin-bottom: 40px; }
+  h2 {
+    font-size: 19px; font-weight: 700; color: var(--white); margin: 36px 0 12px;
+    padding-inline-start: 12px; border-inline-start: 3px solid var(--red-lt);
+  }
+  p, li { font-size: 15px; color: rgba(232,232,232,0.85); margin-bottom: 12px; }
+  ul { padding-inline-start: 20px; margin-bottom: 12px; }
+  strong { color: var(--white); }
+  a { color: #D98C8E; }
+  .risk-box {
+    background: rgba(139,21,23,0.12); border: 1px solid rgba(139,21,23,0.45);
+    padding: 20px; margin: 16px 0; font-size: 14px; color: var(--text); line-height: 1.8;
+  }
+  footer { text-align: center; padding: 28px; border-top: 1px solid var(--line); background: var(--bg2); }
+  footer p { font-size: 12px; color: var(--text-muted); font-family: 'Barlow', sans-serif; margin: 0; }
+  @media (max-width: 600px) {
+    nav { padding: 12px 20px; }
+    .nav-logo img { height: 110px; margin: -32px 0; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body id="body">
+
+<nav>
+  <a href="index.html" class="nav-logo"><img src="val_logo_light_ver.png" alt="Valmuntra"></a>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-ar" onclick="setLang('ar')">ع</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="index.html" class="nav-back">
+      <span class="lang-ar">→ العودة إلى valmuntra.com</span>
+      <span class="lang-en">← Back to valmuntra.com</span>
+    </a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1><span class="lang-ar">شروط الخدمة</span><span class="lang-en">Terms of Service</span></h1>
+  <p class="updated"><span class="lang-ar">آخر تحديث: سبتمبر 2026</span><span class="lang-en">Last updated: September 2026</span></p>
+
+  <p>
+    <span class="lang-ar">تحكم شروط الخدمة هذه ("الشروط") وصولك إلى واستخدامك لموقع Valmuntra الإلكتروني (valmuntra.com) وبوابة العملاء (معاً، "الخدمات")، والتي تديرها Valmuntra ("Valmuntra" أو "نحن" أو "لنا"). بإنشائك لحساب أو استخدامك للخدمات، فإنك توافق على هذه الشروط.</span>
+    <span class="lang-en">These Terms of Service ("Terms") govern your access to and use of the Valmuntra website (valmuntra.com) and client portal (together, the "Services"), operated by Valmuntra ("Valmuntra", "we", "us", or "our"). By creating an account or using the Services, you agree to these Terms.</span>
+  </p>
+
+  <h2><span class="lang-ar">1. الأهلية</span><span class="lang-en">1. Eligibility</span></h2>
+  <p>
+    <span class="lang-ar">يجب أن يكون عمرك 18 عاماً على الأقل وأن تكون قادراً قانونياً على الدخول في اتفاقية ملزمة لاستخدام الخدمات. أنت مسؤول عن التأكد من أن استخدام الخدمات قانوني في نطاقك القضائي.</span>
+    <span class="lang-en">You must be at least 18 years old and legally able to enter into a binding agreement to use the Services. You are responsible for ensuring that use of the Services is lawful in your jurisdiction.</span>
+  </p>
+
+  <h2><span class="lang-ar">2. تسجيل الحساب والتحقق من الهوية</span><span class="lang-en">2. Account Registration &amp; Identity Verification</span></h2>
+  <p>
+    <span class="lang-ar">يجب عليك تقديم معلومات دقيقة وكاملة عند التسجيل، والحفاظ على تحديثها. لتفعيل حساب تداول حقيقي، يجب عليك إكمال عملية التحقق من الهوية (KYC) لدينا، والتي تتطلب وثيقة هوية صادرة عن جهة حكومية وصورة شخصية (سيلفي) للتأكيد. يجوز لنا الموافقة على أي طلب تحقق أو رفضه أو طلب معلومات إضافية بشأنه وفق تقديرنا.</span>
+    <span class="lang-en">You must provide accurate and complete information when registering, and keep it up to date. To activate a live trading account, you must complete our identity verification (KYC) process, which requires a government-issued ID and a selfie for confirmation. We may approve, reject, or request additional information for any verification submission at our discretion.</span>
+  </p>
+
+  <h2><span class="lang-ar">3. طبيعة الخدمات</span><span class="lang-en">3. Nature of the Services</span></h2>
+  <p>
+    <span class="lang-ar">تعمل Valmuntra كوسيط تعريف (introducing broker)، بالشراكة مع Harmonic لمساعدة العملاء على فتح وإدارة حساب تداول على منصة MT5، وتنسيق طلبات الإيداع والسحب نيابة عنك. بوابة Valmuntra ليست بحد ذاتها منصة تداول — بل هي طبقة تنسيق وإدارة حساب موجهة للعميل؛ يتم تنفيذ التداول وتوفير حساب التداول الأساسي من قبل Harmonic.</span>
+    <span class="lang-en">Valmuntra acts as an introducing broker, partnering with Harmonic to help clients open and manage a trading account on the MT5 platform, and to coordinate deposit and withdrawal requests on your behalf. Valmuntra's portal is not itself a trading platform — it is a client-facing coordination and account-management layer; trade execution and the underlying trading account are provided by Harmonic.</span>
+  </p>
+
+  <div class="risk-box">
+    <span class="lang-ar"><strong>تحذير من المخاطر:</strong> ينطوي تداول العملات الأجنبية والأدوات المالية الأخرى ذات الرافعة المالية على مستوى عالٍ من المخاطر وقد لا يكون مناسباً لجميع المستثمرين. قد تتكبد خسارة لبعض أو كل رأس مالك المستثمر. لا ينبغي عليك استثمار أموال لا يمكنك تحمل خسارتها، ويجب أن تكون على علم بجميع المخاطر المرتبطة بالتداول بالرافعة المالية قبل استخدام الخدمات. الأداء السابق لا يشير إلى النتائج المستقبلية، ولا تقدم Valmuntra أي ضمان للربح أو الحماية من الخسارة.</span>
+    <span class="lang-en"><strong>Risk Warning:</strong> Trading foreign exchange and other leveraged financial instruments carries a high level of risk and may not be suitable for all investors. You could sustain a loss of some or all of your invested capital. You should not invest money that you cannot afford to lose, and you should be aware of all the risks associated with leveraged trading before using the Services. Past performance is not indicative of future results, and Valmuntra makes no guarantee of profit or protection against loss.</span>
+  </div>
+
+  <h2><span class="lang-ar">4. الإيداعات والسحوبات</span><span class="lang-en">4. Deposits &amp; Withdrawals</span></h2>
+  <p>
+    <span class="lang-ar">تتم معالجة الإيداعات والسحوبات من قبل فريقنا بعد تقديمك لطلب عبر البوابة. قد نستغرق وقتاً معقولاً للتحقق من الطلب ومعالجته، وقد نطلب تأكيداً إضافياً لأي طلب (مثل إيصال أوضح)، وقد نرفض طلباً لا يستوفي متطلبات التحقق لدينا. قد تتغير طرق الإيداع والسحب المتاحة من وقت لآخر.</span>
+    <span class="lang-en">Deposits and withdrawals are processed by our team after you submit a request through the portal. We may take reasonable time to verify and process a request, may request additional confirmation for a submission (such as a clearer receipt), and may decline a request that fails to meet our verification requirements. Available deposit and withdrawal methods may change from time to time.</span>
+  </p>
+
+  <h2><span class="lang-ar">5. برنامج الإحالة</span><span class="lang-en">5. Referral Program</span></h2>
+  <p>
+    <span class="lang-ar">يمكن للعملاء مشاركة رابط إحالة شخصي لكسب عمولات على نشاط تداول العملاء الذين يحيلونهم، وفق أي هيكل إحالة نوفره في ذلك الوقت. يجوز لنا تغيير برنامج الإحالة أو إيقافه، أو رفض احتساب إحالة نعتقد بشكل معقول أنها احتيالية أو تعسفية، وفق تقديرنا.</span>
+    <span class="lang-en">Clients may share a personal referral link to earn commissions on the trading activity of clients they refer, under whatever referral structure we make available at the time. We may change or discontinue the referral program, or decline to credit a referral we reasonably believe to be fraudulent or abusive, at our discretion.</span>
+  </p>
+
+  <h2><span class="lang-ar">6. السلوك المحظور</span><span class="lang-en">6. Prohibited Conduct</span></h2>
+  <ul>
+    <li><span class="lang-ar">تقديم معلومات كاذبة أو مضللة، بما في ذلك أثناء التحقق من الهوية.</span><span class="lang-en">Providing false or misleading information, including during identity verification.</span></li>
+    <li><span class="lang-ar">استخدام الخدمات لغسل الأموال أو الاحتيال أو أي غرض غير قانوني.</span><span class="lang-en">Using the Services for money laundering, fraud, or any unlawful purpose.</span></li>
+    <li><span class="lang-ar">محاولة التدخل في الخدمات أو تعطيلها أو الوصول غير المصرح به إليها.</span><span class="lang-en">Attempting to interfere with, disrupt, or gain unauthorized access to the Services.</span></li>
+    <li><span class="lang-ar">إنشاء حسابات متعددة لإساءة استخدام برنامج الإحالة أو الشروط الترويجية.</span><span class="lang-en">Creating multiple accounts to abuse the referral program or promotional terms.</span></li>
+  </ul>
+
+  <h2><span class="lang-ar">7. الملكية الفكرية</span><span class="lang-en">7. Intellectual Property</span></h2>
+  <p>
+    <span class="lang-ar">اسم وشعار Valmuntra، ومحتوى الموقع الإلكتروني والبوابة، هي ملك لـ Valmuntra أو مرخّصيها ولا يجوز استخدامها دون إذن كتابي مسبق منا.</span>
+    <span class="lang-en">The Valmuntra name, logo, and the content of the website and portal are the property of Valmuntra or its licensors and may not be used without our prior written permission.</span>
+  </p>
+
+  <h2><span class="lang-ar">8. إخلاء المسؤولية وتحديدها</span><span class="lang-en">8. Disclaimers &amp; Limitation of Liability</span></h2>
+  <p>
+    <span class="lang-ar">يتم تقديم الخدمات "كما هي" دون أي ضمانات من أي نوع، إلى أقصى حد يسمح به القانون. إلى أقصى حد يسمح به القانون، لن تكون Valmuntra مسؤولة عن أي أضرار غير مباشرة أو عرضية أو تبعية، أو عن خسائر التداول، الناشئة عن استخدامك للخدمات.</span>
+    <span class="lang-en">The Services are provided "as is" without warranties of any kind, to the fullest extent permitted by law. To the fullest extent permitted by law, Valmuntra shall not be liable for any indirect, incidental, or consequential damages, or for trading losses, arising from your use of the Services.</span>
+  </p>
+
+  <h2><span class="lang-ar">9. الإنهاء</span><span class="lang-en">9. Termination</span></h2>
+  <p>
+    <span class="lang-ar">يجوز لنا تعليق أو إنهاء حسابك إذا اعتقدنا بشكل معقول أنك انتهكت هذه الشروط، أو قدمت معلومات كاذبة، أو استخدمت الخدمات لغرض غير قانوني. يمكنك التوقف عن استخدام الخدمات في أي وقت.</span>
+    <span class="lang-en">We may suspend or terminate your account if we reasonably believe you have violated these Terms, provided false information, or used the Services for an unlawful purpose. You may stop using the Services at any time.</span>
+  </p>
+
+  <h2><span class="lang-ar">10. التغييرات على هذه الشروط</span><span class="lang-en">10. Changes to These Terms</span></h2>
+  <p>
+    <span class="lang-ar">قد نقوم بتحديث هذه الشروط من وقت لآخر. سيتم توضيح أي تغييرات جوهرية من خلال تحديث تاريخ "آخر تحديث" أعلاه، ويشكل استمرار استخدامك للخدمات بعد أي تغيير قبولاً للشروط المحدثة.</span>
+    <span class="lang-en">We may update these Terms from time to time. Material changes will be reflected by an updated "Last updated" date above, and continued use of the Services after a change constitutes acceptance of the updated Terms.</span>
+  </p>
+
+  <h2><span class="lang-ar">11. تواصل معنا</span><span class="lang-en">11. Contact Us</span></h2>
+  <p>
+    <span class="lang-ar">إذا كانت لديك أسئلة حول هذه الشروط، تواصل معنا عبر <a href="mailto:support@valmuntra.com">support@valmuntra.com</a> أو عبر واتساب على <span dir="ltr">+963 984 699 071</span>.</span>
+    <span class="lang-en">If you have questions about these Terms, contact us at <a href="mailto:support@valmuntra.com">support@valmuntra.com</a> or via WhatsApp at +963 984 699 071.</span>
+  </p>
+</div>
+
+<footer>
+  <p>© 2026 Valmuntra Trading</p>
+</footer>
+
+<script>
+  function setLang(lang) {
+    const body = document.getElementById('body');
+    const btnAr = document.getElementById('btn-ar');
+    const btnEn = document.getElementById('btn-en');
+    if (lang === 'en') {
+      body.classList.add('en');
+      body.setAttribute('dir', 'ltr');
+      body.setAttribute('lang', 'en');
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+    } else {
+      body.classList.remove('en');
+      body.setAttribute('dir', 'rtl');
+      body.setAttribute('lang', 'ar');
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+    }
+  }
+</script>
+
+</body>
+</html>

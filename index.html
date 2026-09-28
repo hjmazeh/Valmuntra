@@ -532,6 +532,12 @@
   .footer-links a { font-size: 13px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
   .footer-links a:hover { color: var(--text); }
   .footer-note { font-size: 12px; color: var(--text-muted); font-family: 'Barlow', sans-serif; }
+  .risk-fineprint {
+    background: var(--bg2); padding: 18px 64px 0; margin: 0;
+    font-size: 11px; line-height: 1.6; color: var(--text-muted);
+  }
+  .risk-fineprint strong { color: var(--text-mid); font-weight: 700; }
+  .risk-fineprint a { color: var(--text-mid); }
 
   /* ── RESPONSIVE */
   @media (max-width: 900px) {
@@ -545,6 +551,7 @@
     .filter { padding: 60px 24px; }
     .cta-section { padding: 72px 24px; }
     footer { padding: 24px; flex-direction: column; gap: 20px; text-align: center; }
+    .risk-fineprint { padding: 18px 24px 0; text-align: center; }
     .footer-links { justify-content: center; flex-wrap: wrap; gap: 16px; }
     .who-stats { flex-direction: column; gap: 20px; }
     .who-stat { padding-left: 0; border-left: none; border-top: 1px solid var(--line); padding-top: 16px; }
@@ -788,6 +795,11 @@
   </a>
 </section>
 
+<p class="risk-fineprint">
+  <span class="lang-ar"><strong>تحذير من المخاطر:</strong> ينطوي تداول العملات الأجنبية والأدوات المالية ذات الرافعة المالية على مستوى عالٍ من المخاطر وقد لا يكون مناسباً لجميع المستثمرين، وقد تخسر بعض أو كل رأس مالك المستثمر. لا تستثمر أموالاً لا يمكنك تحمّل خسارتها. الأداء السابق لا يضمن النتائج المستقبلية. <a href="terms-of-service.html">شروط الخدمة</a></span>
+  <span class="lang-en"><strong>Risk Warning:</strong> Trading foreign exchange and other leveraged financial instruments carries a high level of risk and may not be suitable for all investors; you could lose some or all of your invested capital. Do not invest money you cannot afford to lose. Past performance is not indicative of future results. <a href="terms-of-service.html">Terms of Service</a></span>
+</p>
+
 <footer>
   <a href="#" class="footer-logo"><img src="val_logo_light_ver.png" alt="Valmuntra" style="height:60px;width:auto;opacity:0.5;"></a>
   <div class="footer-links">
@@ -795,8 +807,10 @@
     <a href="#what"><span class="lang-ar">ما نقدّمه</span><span class="lang-en">Services</span></a>
     <a href="#how"><span class="lang-ar">كيف تبدأ</span><span class="lang-en">How to Start</span></a>
     <a href="signup.html"><span class="lang-ar">افتح حساباً</span><span class="lang-en">Open Account</span></a>
+    <a href="privacy-policy.html"><span class="lang-ar">سياسة الخصوصية</span><span class="lang-en">Privacy Policy</span></a>
+    <a href="terms-of-service.html"><span class="lang-ar">شروط الخدمة</span><span class="lang-en">Terms of Service</span></a>
   </div>
-  <p class="footer-note">© 2026 Valmuntra Trading — Syria</p>
+  <p class="footer-note">© 2026 Valmuntra Trading</p>
 </footer>
 
 <a href="https://wa.me/963984699071" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Contact us on WhatsApp">
