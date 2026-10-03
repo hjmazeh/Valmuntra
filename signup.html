@@ -2,6 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-TVLWP3W4');</script>
+<!-- End Google Tag Manager -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valmuntra — إنشاء حساب</title>
 <meta name="description" content="افتح حساب تداول مع Valmuntra، وسيط تداول سوري معتمد لمنصة Harmonic. تداول واجنِ الأرباح بأمان وشفافية.">
@@ -373,6 +380,10 @@
 <script src="attribution.js"></script>
 </head>
 <body id="body">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TVLWP3W4"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 
 <nav>
   <a href="index.html" class="nav-logo">
@@ -569,6 +580,17 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // Tells Google Tag Manager a signup completed (method only -- no personal
+  // data) so marketing can fire e.g. Meta's CompleteRegistration from GTM.
+  // `then` runs once GTM has handled it, or after 1.5 s regardless (GTM
+  // blocked or not loaded), so a redirect is never held up.
+  function trackSignup(method, then) {
+    let done = false;
+    const go = () => { if (!done) { done = true; if (then) then(); } };
+    try { (window.dataLayer = window.dataLayer || []).push({ event: 'sign_up', method, eventCallback: go, eventTimeout: 1500 }); } catch (e) { /* ignore */ }
+    setTimeout(go, 1600);
+  }
+
   // Password strength
   document.getElementById('password').addEventListener('input', function() {
     const val = this.value;
@@ -667,6 +689,7 @@
       // Show success
       document.getElementById('form-wrap').style.display = 'none';
       document.getElementById('success-box').classList.add('show');
+      trackSignup('email');
 
     } catch (error) {
       btn.disabled = false;
@@ -765,7 +788,7 @@
         attribution: (window.getAttribution && window.getAttribution()) || null,
         created_at: serverTimestamp()
       });
-      window.location.href = 'portal.html';
+      trackSignup('google', () => { window.location.href = 'portal.html'; });
     } catch (error) {
       btn.disabled = false;
       spinner.classList.remove('show');
