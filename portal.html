@@ -762,8 +762,8 @@
       // Notify the team, same as the KYC-submission notification. Best-effort:
       // a failed email shouldn't block the client's request from going through.
       try {
-        await emailjs.send('service_0oshg5a', 'template_k00znup', {
-          to_email: 'support@valmuntra.com',
+        await emailjs.send('service_0oshg5a', 'template_t5qwijc', {
+          // Staff alert template: recipient (support@valmuntra.com) is fixed in EmailJS.
           reply_to: user.email,
           subject: 'MT5 Account Requested — ' + (data.fullname || ''),
           message: `Client: ${data.fullname || ''}\nEmail: ${user.email}\nPhone: ${data.phone || ''}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\n${status === 'active' ? 'Client is already active and has requested an additional MT5 account.' : 'Client is KYC-approved and has requested an MT5 account.'}`

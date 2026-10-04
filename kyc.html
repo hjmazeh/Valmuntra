@@ -815,8 +815,8 @@
       // Send notification email to CS team
       try {
         const fullnameVal = document.getElementById('fullname').value.trim();
-        await emailjs.send('service_0oshg5a', 'template_k00znup', {
-          to_email: 'support@valmuntra.com',
+        await emailjs.send('service_0oshg5a', 'template_t5qwijc', {
+          // Staff alert template: recipient (support@valmuntra.com) is fixed in EmailJS.
           reply_to: currentUser.email,
           subject: 'New KYC Submission — ' + fullnameVal,
           message: `Client: ${fullnameVal}\nEmail: ${currentUser.email}\nSubmitted: ${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Beirut' })}\n\nNew KYC submission received.`
