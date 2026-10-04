@@ -722,7 +722,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { initializeAppCheck, ReCaptchaV3Provider, getToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
+  import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -739,8 +739,8 @@
   const app = initializeApp(firebaseConfig);
 
   // App Check: proves requests come from this site in a real browser
-  // (invisible reCAPTCHA v3). Set up before any other Firebase call.
-  const appCheck = initializeAppCheck(app, { provider: new ReCaptchaV3Provider('6LcYP98tAAAAAOtsNOdfjsz6NVIvOxotT_DJ8H75'), isTokenAutoRefreshEnabled: true });
+  // (invisible reCAPTCHA Enterprise). Set up before any other Firebase call.
+  const appCheck = initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider('6LcYP98tAAAAAOtsNOdfjsz6NVIvOxotT_DJ8H75'), isTokenAutoRefreshEnabled: true });
 
   const auth = getAuth(app);
   const db = getFirestore(app);
